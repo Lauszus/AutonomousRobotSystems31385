@@ -53,9 +53,10 @@
 #define WHEEL_DIAMETER   0.067 /* m */
 #define ED 1.0037 /* Ed */
 #define ED2 1.0007 /* Seconds calibration */
-#define WHEEL_DIAMETER_L ((WHEEL_DIAMETER * (1 + (1 - ED) / 2)) * (1 + (1 - ED2) / 2))
-#define WHEEL_DIAMETER_R ((WHEEL_DIAMETER * (1 - (1 - ED) / 2)) * (1 - (1 - ED2) / 2))
-#define WHEEL_SEPARATION 0.2803 /* m */
+#define ED3 0.9999 /* Third calibration */
+#define WHEEL_DIAMETER_L (((WHEEL_DIAMETER * (1 + (1 - ED) / 2)) * (1 + (1 - ED2) / 2)) * (1 + (1 - ED3) / 2))
+#define WHEEL_DIAMETER_R (((WHEEL_DIAMETER * (1 - (1 - ED) / 2)) * (1 - (1 - ED2) / 2)) * (1 + (1 - ED3) / 2))
+#define WHEEL_SEPARATION 0.2810 /* m */
 #define DELTA_M_L (M_PI * WHEEL_DIAMETER_L / 2000)
 #define DELTA_M_R (M_PI * WHEEL_DIAMETER_R / 2000)
 #define ROBOTPORT 24902
