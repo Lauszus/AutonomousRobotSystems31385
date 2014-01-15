@@ -5,7 +5,9 @@
 #define START_CROSS_DIST 1.225 /* Distance from start to the first cross */
 
 #define IR_GATE_DIST 0.40 /* Distance from robot to gate on the loose */
-#define GATE_DIST 0.55 /* Distance from robot to gate on the loose */
+#define GATE_DIST 0.55 /* Distance between two legs of a gate */
+
+#define TURN_ANGLE 0.005
 
 #define DIST_CAL ((300.0/285.0)) /* *(300/298.5)) */ /* Absolute distance constant */
 #define kV 2.0 /* Constant in angular controller */
@@ -43,17 +45,17 @@
 #define BLACK_VALUE 53.067500
 #define WHITE_VALUE 91.021250
 
-#define BLACK_LINE_FOUND_VALUE 0.2 /* If all the line sensors are below this value, then the robot must have crossed a line */
+#define BLACK_LINE_FOUND_VALUE 0.2 /* If all the line sensors are below this value, then the robot must have crossed a black line */
 
 /*****************************************
 * odometry
 */
 #define WHEEL_DIAMETER   0.067 /* m */
 #define ED 1.0037 /* Ed */
-#define ED2 1.0014 /* Seconds calibration */
-#define WHEEL_DIAMETER_L ((WHEEL_DIAMETER * (1 + (1 - ED) / 2))) /* * (1 + (1 - ED2) / 2)) */
-#define WHEEL_DIAMETER_R ((WHEEL_DIAMETER * (1 - (1 - ED) / 2))) /* * (1 - (1 - ED2) / 2)) */
-#define WHEEL_SEPARATION 0.2761 /* 0.2765 m */
+#define ED2 1.0007 /* Seconds calibration */
+#define WHEEL_DIAMETER_L ((WHEEL_DIAMETER * (1 + (1 - ED) / 2)) * (1 + (1 - ED2) / 2))
+#define WHEEL_DIAMETER_R ((WHEEL_DIAMETER * (1 - (1 - ED) / 2)) * (1 - (1 - ED2) / 2))
+#define WHEEL_SEPARATION 0.2803 /* m */
 #define DELTA_M_L (M_PI * WHEEL_DIAMETER_L / 2000)
 #define DELTA_M_R (M_PI * WHEEL_DIAMETER_R / 2000)
 #define ROBOTPORT 24902

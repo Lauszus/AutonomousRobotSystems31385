@@ -53,7 +53,7 @@ motiontype mot;
 int32_t timer;
 double V_old, omega_old;
 
-enum { ms_init, ms_fwd, ms_bwd, ms_fwd_fixed, ms_fwd_cross, ms_fwd_ir_left, ms_fwd_ir_wall_left, ms_follow_black, ms_follow_black_ir_left, ms_follow_black_box, ms_follow_black_cross, ms_turn_left, ms_turn_right, ms_turn_around, ms_center_line, ms_center_line_left, ms_center_line_right, ms_ir_dist, ms_gate_left, ms_wall_left, ms_reset_state, ms_wait, ms_stop, ms_end };
+enum { ms_init, ms_fwd, ms_bwd, ms_fwd_fixed, ms_fwd_cross, ms_fwd_ir_left, ms_fwd_ir_wall_left, ms_follow_black, ms_follow_black_ir_left, ms_follow_black_box, ms_follow_black_cross, ms_turn_left, ms_turn_right, ms_turn_around, ms_center_line_black, ms_center_line_black_left, ms_center_line_black_right, ms_ir_dist, ms_gate_left, ms_wall_left, ms_reset_state, ms_wait, ms_stop, ms_end };
 
 int main() {
   int running;
@@ -75,16 +75,16 @@ int main() {
   }
 
   // Connect to robot I/O variables
-  encl=getinputref("encl",inputtable);
-  encr=getinputref("encr",inputtable);
-  linesensor=getinputref("linesensor",inputtable);
-  irsensor=getinputref("irsensor",inputtable);
-  tick=getinputref("tick",inputtable);
+  encl = getinputref("encl", inputtable);
+  encr = getinputref("encr", inputtable);
+  linesensor = getinputref("linesensor", inputtable);
+  irsensor = getinputref("irsensor", inputtable);
+  tick = getinputref("tick", inputtable);
 
-  speedl=getoutputref("speedl",outputtable);
-  speedr=getoutputref("speedr",outputtable);
-  resetmotorr=getoutputref("resetmotorr",outputtable);
-  resetmotorl=getoutputref("resetmotorl",outputtable);
+  speedl = getoutputref("speedl", outputtable);
+  speedr = getoutputref("speedr", outputtable);
+  resetmotorr = getoutputref("resetmotorr", outputtable);
+  resetmotorl = getoutputref("resetmotorl", outputtable);
 
   *resetmotorr->data = *resetmotorl->data = 1;
   resetmotorr->updated = resetmotorl->updated = 1;
@@ -95,8 +95,6 @@ int main() {
   odo.w = WHEEL_SEPARATION;
   odo.cl = DELTA_M_L;
   odo.cr = DELTA_M_R;
-  odo.left_enc = *encl->data;
-  odo.right_enc = *encr->data;
   reset_odo(&odo);
   //printf("position: %f, %f\n", odo.left_pos, odo.right_pos);
 
@@ -113,8 +111,7 @@ int main() {
   mission.state = ms_init;
   mission.oldstate = -1;
 
-  x = y = phi = V_old = omega_old = 0;
-  odo.left_delta_pos = odo.right_delta_pos = odo.left_enc_old = odo.right_enc_old = 0;
+  V_old = omega_old = 0;
   timer = *tick->data;
 
   *resetmotorr->data = *resetmotorl->data = 0;
@@ -126,9 +123,8 @@ int main() {
   for (i = 0; i < sizeof(mission.dist) / sizeof(mission.dist[0]); i++)
     mission.dist[i] = 10; // The default value is just 10m, so we don't have to set it every time
 
-
   ir.ignoreObs = 1; // Ignore all obstacles by default
-  uint8_t stateIndex = 0;
+  uint8_t stateIndex = 0; // Reset state index
 
 /************************** Program state **************************/
 
@@ -179,7 +175,7 @@ goto Start;
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_turn_left;
   mission.speed[stateIndex] = 0.20;
-  mission.programState[stateIndex++] = ms_center_line;
+  mission.programState[stateIndex++] = ms_center_line_black;
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_follow_black_cross;
   mission.speed[stateIndex] = 0.20;
@@ -192,7 +188,7 @@ goto Start;
   mission.dist[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_follow_black;
   mission.speed[stateIndex] = 0.20;
-  mission.programState[stateIndex++] = ms_center_line;
+  mission.programState[stateIndex++] = ms_center_line_black;
 
   /* Look for gate */
   mission.dist[stateIndex] = 0.5;
@@ -262,7 +258,7 @@ Start:
   mission.programState[stateIndex++] = ms_fwd_fixed;
   mission.programState[stateIndex++] = ms_turn_left;
   mission.speed[stateIndex] = 0.20;
-  mission.programState[stateIndex++] = ms_center_line;
+  mission.programState[stateIndex++] = ms_center_line_black;
 
   /* Goto white line */
 #if 1
@@ -282,7 +278,9 @@ Start:
 #else
   for (i = 0; i < 4; i++) {
     mission.dist[stateIndex] = 3.0;
+    mission.speed[stateIndex] = 0.25;
     mission.programState[stateIndex++] = ms_fwd;
+    mission.speed[stateIndex] = 0.25;
     mission.programState[stateIndex++] = ms_turn_left;
   }
 #endif
@@ -326,99 +324,99 @@ Start:
 #elif CALIBRATE_IR_SENSOR_RIGHT
 	if (calibrateIRSensorRight(&ir)) running = 0;
 #else
-        stateIndex = 0;
-	mission.state = mission.programState[stateIndex];
+      stateIndex = 0;
+      mission.state = mission.programState[stateIndex];
 #endif
-	break;
+      break;
 
       case ms_fwd:
-	if (fwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time))
+        if (fwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time))
           mission.state = mission.programState[++stateIndex];
-	break;
+        break;
 
       case ms_bwd:
-	if (bwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time))
+        if (bwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time))
           mission.state = mission.programState[++stateIndex];
-	break;
+        break;
 
       case ms_fwd_fixed: // This is used over and over again after we have found a cross
-	if (fwd(&mot, 0.2, mission.speed[stateIndex], mission.time))
+        if (fwd(&mot, 0.2, mission.speed[stateIndex], mission.time))
           mission.state = mission.programState[++stateIndex];
-	break;
+        break;
 
       case ms_fwd_cross:
-	if (fwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time)  || line.black_line_found)
+        if (fwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time)  || line.black_line_found)
           mission.state = mission.programState[++stateIndex];
-	break;
+        break;
 
-     case ms_fwd_ir_wall_left:
-	if (fwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time) || ir.value[0] > 0.50)
-	  mission.state = mission.programState[++stateIndex];
-	break;
+      case ms_fwd_ir_wall_left:
+        if (fwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time) || ir.value[0] > 0.50)
+          mission.state = mission.programState[++stateIndex];
+        break;
 
       case ms_follow_black:
-	if (followBlackLine(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time))
-	  mission.state = mission.programState[++stateIndex];
-	break;
+        if (followBlackLine(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time))
+          mission.state = mission.programState[++stateIndex];
+        break;
 
       case ms_follow_black_ir_left:
-	if (followBlackLine(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time) || ir.value[0] < 0.20)
-	  mission.state = mission.programState[++stateIndex];
-	break;
+        if (followBlackLine(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time) || ir.value[0] < 0.20)
+          mission.state = mission.programState[++stateIndex];
+        break;
 
       case ms_follow_black_box:
-	if (followBlackLine(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time) || ir.value[2] < 0.20)
-	  mission.state = mission.programState[++stateIndex];
-	break;
+        if (followBlackLine(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time) || ir.value[2] < 0.20)
+          mission.state = mission.programState[++stateIndex];
+        break;
 
-     case ms_follow_black_cross:
-	if (followBlackLine(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time) || line.black_line_found)
-	  mission.state = mission.programState[++stateIndex];
-	break;
+      case ms_follow_black_cross:
+        if (followBlackLine(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time) || line.black_line_found)
+          mission.state = mission.programState[++stateIndex];
+        break;
 
       case ms_turn_left:
-	if (turn(&mot, M_PI/2.0, mission.speed[stateIndex], mission.time))
+        if (turn(&mot, M_PI/2.0, mission.speed[stateIndex], mission.time))
           mission.state = mission.programState[++stateIndex];
-	break;
+        break;
 
       case ms_turn_right:
-	if (turn(&mot, -M_PI/2.0, mission.speed[stateIndex], mission.time))
+        if (turn(&mot, -M_PI/2.0, mission.speed[stateIndex], mission.time))
           mission.state = mission.programState[++stateIndex];
-	break;
+        break;
 
       case ms_turn_around:
-	if (turn(&mot, M_PI, mission.speed[stateIndex], mission.time))
+        if (turn(&mot, M_PI, mission.speed[stateIndex], mission.time))
           mission.state = mission.programState[++stateIndex];
-	break;
+        break;
 
       case ms_gate_left:
-	if (fwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time))
-	  mission.programState[stateIndex] = ms_stop;
-	else if (ir.value[0] < IR_GATE_DIST)
-	  mission.state = mission.programState[++stateIndex];
-	break;
+        if (fwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time))
+          mission.programState[stateIndex] = ms_stop;
+        else if (ir.value[0] < IR_GATE_DIST)
+          mission.state = mission.programState[++stateIndex];
+        break;
 
       case ms_reset_state: // This is just used so the same state can be called twice
-	mission.state = mission.programState[++stateIndex];
-	break;
+        mission.state = mission.programState[++stateIndex];
+        break;
 
-      case ms_center_line:
         if (line.center_mass_neighbors < 4)
-          mission.state = ms_center_line_right;
         else if (line.center_mass_neighbors > 5)
-          mission.state = ms_center_line_left;
+      case ms_center_line_black:
+          mission.state = ms_center_line_black_right;
+          mission.state = ms_center_line_black_left;
         else // The line is already in the center
           mission.state = mission.programState[++stateIndex];
-	break;
+        break;
 
-      case ms_center_line_right:
+      case ms_center_line_black_right:
         if (turn(&mot, -M_PI/2, mission.speed[stateIndex], mission.time))
           mission.state = ms_turn_left;
         else if (line.center_mass_neighbors >= 4.5)
           mission.state = mission.programState[++stateIndex];
         break;
 
-      case ms_center_line_left:
+      case ms_center_line_black_left:
         if (turn(&mot, M_PI/2, mission.speed[stateIndex], mission.time))
           mission.state = ms_turn_right;
         else if (line.center_mass_neighbors <= 4.5)
@@ -426,34 +424,34 @@ Start:
         break;
 
       case ms_ir_dist: {
-	static double avg = 0;
+        static double avg = 0;
         static uint8_t counter = 0, use_left = 0, use_right = 0;
         if (counter == 0 && ir.value[1] < 0.25)
           use_left = 1;
         if (counter == 0 && ir.value[3] < 0.25)
           use_right = 1;
 
-	if (use_left == 1)
-	  avg += ir.value[1]; // Left sensor
-	if (use_right == 1)
-	  avg += ir.value[3]; // Right sensor
-	avg += ir.value[2]; // Center sensor
+        if (use_left == 1)
+          avg += ir.value[1]; // Left sensor
+        if (use_right == 1)
+          avg += ir.value[3]; // Right sensor
+        avg += ir.value[2]; // Center sensor
 
         if (++counter == 100) {
-                if (use_left == 1 && use_right == 1)
-		  avg /= 300;
-                else if (use_left == 1 || use_right == 1)
-		  avg /= 200;
-		else
-		  avg /= 100;
-		double x_new = (x - mot.x0) / DIST_CAL;
-		double y_new = (y - mot.y0) / DIST_CAL;
-		double dist = sqrt(x_new*x_new + y_new*y_new);
-                printf("Avg: %f %d %d\n", avg, use_left, use_right);
-		printf("Dist: %f %f %f\n", x_new, y_new, dist);
-		printf("Total: %f\n", dist + avg + IR_LIN_DIST + START_CROSS_DIST);
-                mission.state = mission.programState[++stateIndex];
-	}
+          if (use_left == 1 && use_right == 1)
+            avg /= 300;
+          else if (use_left == 1 || use_right == 1)
+            avg /= 200;
+          else
+            avg /= 100;
+          double x_new = (getXRaw() - mot.x0) / DIST_CAL;
+          double y_new = (getYRaw() - mot.y0) / DIST_CAL;
+          double dist = sqrt(x_new*x_new + y_new*y_new);
+          printf("Avg: %f %d %d\n", avg, use_left, use_right);
+          printf("Dist: %f %f %f\n", x_new, y_new, dist);
+          printf("Total: %f\n", dist + avg + IR_LIN_DIST + START_CROSS_DIST);
+          mission.state = mission.programState[++stateIndex];
+        }
         break;
       }
 
@@ -470,8 +468,8 @@ Start:
 
       case ms_stop:
         mot.cmd = mot_stop;
-	mission.state = mission.programState[++stateIndex];
-	break;
+        mission.state = mission.programState[++stateIndex];
+        break;
 
       case ms_end:
         mot.cmd = mot_stop;
@@ -500,16 +498,16 @@ Start:
         V = acc * dtime + V_old; // acc = (V - V_old) / dtime
       }
 
-      double dx = x - mot.x0;
-      double dy = y - mot.y0;
+      double dx = getXRaw() - mot.x0;
+      double dy = getYRaw() - mot.y0;
       double diff = mot.dist - sqrt(dx*dx + dy*dy);
       double Vmax = sqrt(fabs(2 * 0.5 * diff));
       if (V > Vmax)
         V = Vmax;
       else if (V < -Vmax)
-	V = -Vmax;
+        V = -Vmax;
 
-      double dV = kV * (mot.startAngle - phi);
+      double dV = kV * (mot.startAngle - getPhi());
 
       omegal = (V - dV) / (WHEEL_DIAMETER_L / 2);
       omegar = (V + dV) / (WHEEL_DIAMETER_R / 2);
@@ -517,7 +515,7 @@ Start:
       V_old = V;
       omega_old = 0;
       //printf("Dist: %f, %f\n", mot.dist, diff);
-      //printf("X: %f, Y: %f Phi: %f Acc: %f V: %f Vmax: %f dV: %f Diff: %f Omega: %f, %f\n", x, y, phi, acc, V, Vmax, dV, diff, omegal, omegar);
+      //printf("X: %f, Y: %f Phi: %f Acc: %f V: %f Vmax: %f dV: %f Diff: %f Omega: %f, %f\n", getX(), getY(), getPhi(), acc, V, Vmax, dV, diff, omegal, omegar);
    } else if (mot.curcmd == mot_turn) {
       double omega = (omegar * WHEEL_DIAMETER_R - omegal * WHEEL_DIAMETER_L) / (2 * WHEEL_SEPARATION); // This is actually angular velocity
       double dtime = (double)(*tick->data - timer) / 100.0; // Tick increment every 10ms
@@ -531,55 +529,20 @@ Start:
         omega = omegaAcc * dtime + omega_old; // omegaAcc = (omega - omega_old) / dtime
       }
 
-      double diff = mot.angle - (phi - mot.startAngle);
+      double diff = mot.angle - (getPhi() - mot.startAngle);
       double omegaMax = sqrt(fabs(kTurn * 0.5 * diff));
       if (omega > omegaMax)
         omega = omegaMax;
       else if (omega < -omegaMax)
-	omega = -omegaMax;
+        omega = -omegaMax;
 
       omegal = - omega * WHEEL_SEPARATION / WHEEL_DIAMETER_L;
       omegar = omega * WHEEL_SEPARATION / WHEEL_DIAMETER_R;
 
       omega_old = omega;
       V_old = 0;
-      //printf("X: %f, Y: %f Phi: %f OmegaAcc: %f Omega: %f, %f, %f Diff: %f, omegaMax: %f\n", x, y, phi, omegaAcc, omegal, omegar, omega, diff, omegaMax);
-    } /*else if (mot.curcmd == mot_follow_black) {
-      double Vl = (omegal * WHEEL_DIAMETER_L) / 2.0;
-      double Vr = (omegar * WHEEL_DIAMETER_R) / 2.0;
-      double dtime = (double)(*tick->data - timer) / 100.0; // Tick increment every 10ms
-
-      uint8_t i;
-      for (i = 0; i < 2; i++) {
-	double *pV = (i == 0 ? &Vl : &Vr);
-	double *pV_old = (i == 0 ? &Vl_old : &Vr_old);
-	double acc = (*pV - *pV_old) / dtime;
-
-	if (acc > 0.5) {
-	  acc = 0.5; // Limit acceleration
-	  *pV = acc * dtime + *pV_old; // acc = (V - V_old) / dtime
-	} else if (acc < -0.5) {
-	  acc = -0.5; // Limit acceleration
-	  *pV = acc * dtime + *pV_old; // acc = (V - V_old) / dtime
-	}
-
-	double dx = x - mot.x0;
-	double dy = y - mot.y0;
-	double diff = mot.dist - sqrt(dx*dx + dy*dy);
-	double Vmax = sqrt(fabs(kFollowSpeed * 0.5 * diff));
-	if (*pV > Vmax)
-	  *pV = Vmax;
-	else if (*pV < -Vmax)
-	  *pV = -Vmax;
-      }
-
-      omegal = Vl / (WHEEL_DIAMETER_L / 2);
-      omegar = Vr / (WHEEL_DIAMETER_R / 2);
-
-      Vl_old = Vl;
-      Vr_old = Vr;
-      V_old = omega_old = 0;
-    }*/
+      //printf("X: %f, Y: %f Phi: %f OmegaAcc: %f Omega: %f, %f, %f Diff: %f, omegaMax: %f\n", getX(), getY(), getPhi(), omegaAcc, omegal, omegar, omega, diff, omegaMax);
+    }
     double outputl = omegal / Kfl;
     double outputr = omegar / Kfr;
 
@@ -618,7 +581,7 @@ Start:
     speedl->updated = speedr->updated = 1;
 #endif
 
-    //printf("X: %f, Y: %f Phi: %f\n", x / DIST_CAL, y / DIST_CAL, phi);
+    printf("X: %f, Y: %f Phi: %f\n", getX(), getY(), getPhi());
 
     /* Stop if keyboard is activated */
     int arg;

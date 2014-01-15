@@ -9,15 +9,14 @@
 #include "constants.h"
 
 enum { mot_stop = 1, mot_move, mot_move_bwd, mot_follow_black, mot_turn };
-double dUl, dUr, dU, dPhi, x, y, phi;
 
 typedef struct { // Input signals
-  int left_enc,right_enc; // encoderticks
+  int left_enc, right_enc; // encoderticks
   // parameters
   double w; // wheel separation
   double cr,cl; // meters per encodertick
   // Output signals
-  double right_pos,left_pos;
+  double right_pos, left_pos;
   // internal variables
   int left_enc_old, right_enc_old;
   // Difference between current pos and new measurement
@@ -66,6 +65,12 @@ typedef struct {
   uint8_t length;
   uint8_t ignoreObs; // Ignore obstacles
 } irsensortype;
+
+double getX();
+double getXRaw();
+double getY();
+double getYRaw();
+double getPhi();
 
 void updateIRSensor(symTableElement *irsensor, irsensortype *p);
 void printIRSensor(irsensortype *p);

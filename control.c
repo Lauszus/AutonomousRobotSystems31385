@@ -1,5 +1,27 @@
 #include "control.h"
 
+double dUl, dUr, dU, dPhi, x, y, phi;
+
+double getX() {
+  return x / DIST_CAL;
+}
+
+double getXRaw() {
+  return x;
+}
+
+double getY() {
+  return y / DIST_CAL;
+}
+
+double getYRaw() {
+  return y;
+}
+
+double getPhi() {
+  return phi;
+}
+
 void updateIRSensor(symTableElement *irsensor, irsensortype *p) {
   uint8_t i;
   for (i = 0; i < p->length; i++) {
@@ -81,7 +103,7 @@ uint8_t calibrateIRSensorRight(irsensortype *p) {
 
     uint8_t i;
     for (i = 0; i < 100; i++)
-	avg += calArray[i];
+      avg += calArray[i];
     avg /= 100;
 
 
@@ -233,8 +255,9 @@ void update_pos(odotype *p) {
  */
 void reset_odo(odotype *p) {
   p->right_pos = p->left_pos = 0.0;
-  p->right_enc_old = p->right_enc;
-  p->left_enc_old = p->left_enc;
+  p->right_enc_old = p->left_enc_old = 0; // Since the motors are reset in main, these should be set to zero and not the current position
+  p->left_delta_pos = p->right_delta_pos = 0;
+  x = y = phi = 0;
 }
 
 void update_odo(odotype *p) {
@@ -262,71 +285,71 @@ void update_motcon(motiontype *p, linesensortype *line) {
       case mot_move:
       case mot_move_bwd:
       case mot_follow_black:
-	p->startpos = (p->left_pos + p->right_pos)/2.0;
-	p->curcmd = p->cmd;
-	break;
+        p->startpos = (p->left_pos + p->right_pos)/2.0;
+        p->curcmd = p->cmd;
+        break;
 
       case mot_turn:
-	if (p->angle > 0) // Left
-	  //p->startpos = p->right_pos;
-	  p->startpos = p->right_pos - p->left_pos;
-	else // Right
-	  //p->startpos = p->left_pos;
-	  p->startpos = p->left_pos - p->right_pos;
-	  //printf("Start pos: %f\n", p->startpos);
-	p->curcmd = mot_turn;
+        if (p->angle > 0) { // left
+          //p->startpos = p->right_pos;
+          p->startpos = p->right_pos - p->left_pos;
+        } else { // Right
+          //p->startpos = p->left_pos;
+          p->startpos = p->left_pos - p->right_pos;
+          //printf("Start pos: %f\n", p->startpos);
+        }
+        p->curcmd = mot_turn;
         break;
      }
      p->cmd=0;
    }
 
-   switch (p->curcmd) {
-     case mot_stop:
-       p->motorspeed_l=0;
-       p->motorspeed_r=0;
+  switch (p->curcmd) {
+    case mot_stop:
+       p->motorspeed_l = 0;
+       p->motorspeed_r = 0;
        break;
 
      case mot_move:
        if ((p->right_pos+p->left_pos)/2.0 - p->startpos >= p->dist) {
          p->finished = 1;
-	 p->motorspeed_l = p->motorspeed_r = 0;
+         p->motorspeed_l = p->motorspeed_r = 0;
        }
        else
-	 p->motorspeed_l = p->motorspeed_r = p->speedcmd;
+        p->motorspeed_l = p->motorspeed_r = p->speedcmd;
       break;
 
      case mot_move_bwd:
        if ((p->right_pos+p->left_pos)/2.0 - p->startpos <= -p->dist) {
          p->finished = 1;
-	 p->motorspeed_l = p->motorspeed_r = 0;
+         p->motorspeed_l = p->motorspeed_r = 0;
        }
        else
-	 p->motorspeed_l = p->motorspeed_r = -p->speedcmd;
+        p->motorspeed_l = p->motorspeed_r = -p->speedcmd;
       break;
 
-     case mot_follow_black:
-       if ((p->right_pos+p->left_pos)/2.0 - p->startpos >= p->dist) {
-          p->finished = 1;
-	  p->motorspeed_l = p->motorspeed_r = 0;
-       }
-       else {
-	 static double error_old = 0;
+    case mot_follow_black:
+      if ((p->right_pos+p->left_pos)/2.0 - p->startpos >= p->dist) {
+        p->finished = 1;
+        p->motorspeed_l = p->motorspeed_r = 0;
+      } else {
+        static double error_old = 0;
 	 double error = line->center_mass_neighbors - 4.5;
-	 error *= p->speedcmd;
-	 double pSpeed = kPfollow * error;
-	 double dSpeed = kDfollow * (error - error_old);
-	 double speed = pSpeed + dSpeed;
-	 error_old = error;
-	 //printf("Speed: %f\n", speed);
-         if (speed < 0) {
- 	   p->motorspeed_l = p->speedcmd - speed;
-	   p->motorspeed_r = p->speedcmd + speed;
-	 } else {
-	   p->motorspeed_l = p->speedcmd - speed;
-	   p->motorspeed_r = p->speedcmd + speed;
-	 }
-       }
-       break;
+        error *= p->speedcmd;
+        double pSpeed = kPfollow * error;
+        double dSpeed = kDfollow * (error - error_old);
+        double speed = pSpeed + dSpeed;
+        error_old = error;
+        //printf("Speed: %f\n", speed);
+        if (speed < 0) {
+          p->motorspeed_l = p->speedcmd - speed;
+          p->motorspeed_r = p->speedcmd + speed;
+        } else {
+          p->motorspeed_l = p->speedcmd - speed;
+          p->motorspeed_r = p->speedcmd + speed;
+        }
+      }
+      break;
 
 #if 0
      case mot_turn:
@@ -354,26 +377,32 @@ void update_motcon(motiontype *p, linesensortype *line) {
 	case mot_turn:
 	  //printf("Angle: %f\n", p->angle);
 	  if (p->angle > 0) { // Left
-	    double pos = p->right_pos - p->left_pos - p->startpos;
- 	    //printf("Left Pos: %f\n", pos);
-            if (pos <= p->angle * p->w) {
-              p->motorspeed_r = p->speedcmd;
-	      p->motorspeed_l = -p->speedcmd;
-            } else {
-              p->motorspeed_r = p->motorspeed_l = 0;
-              p->finished = 1;
-            }
-          } else { // Right
-	    double pos = p->left_pos - p->right_pos - p->startpos;
-            //printf("Right pos: %f\n", pos);
-            if (pos <= fabs(p->angle) * p->w) {
-              p->motorspeed_l = p->speedcmd;
-              p->motorspeed_r = -p->speedcmd;
-            } else {
-              p->motorspeed_l = p->motorspeed_r = 0;
-  	      p->finished = 1;
-            }
-          }
+      double pos = p->right_pos - p->left_pos - p->startpos;
+      //printf("Left Pos: %f\n", pos);
+      if (pos < (p->angle - TURN_ANGLE) * p->w) {
+        p->motorspeed_r = p->speedcmd;
+        p->motorspeed_l = -p->speedcmd;
+      } else if (pos > (p->angle + TURN_ANGLE) * p->w) {
+        p->motorspeed_r = -p->speedcmd;
+        p->motorspeed_l = p->speedcmd;
+      } else {
+        p->motorspeed_r = p->motorspeed_l = 0;
+        p->finished = 1;
+      }
+    } else { // Right
+      double pos = p->left_pos - p->right_pos - p->startpos;
+      //printf("Right pos: %f\n", pos);
+      if (pos < (fabs(p->angle) - TURN_ANGLE) * p->w) {
+        p->motorspeed_l = p->speedcmd;
+        p->motorspeed_r = -p->speedcmd;
+      } else if (pos > (fabs(p->angle) + TURN_ANGLE) * p->w) {
+        p->motorspeed_l = -p->speedcmd;
+        p->motorspeed_r = p->speedcmd;
+      } else {
+        p->motorspeed_l = p->motorspeed_r = 0;
+  	    p->finished = 1;
+      }
+    }
 	  break;
 #endif
    }
