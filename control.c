@@ -654,8 +654,8 @@ void printState(int state) {
     case ms_reset_state:
       printf("ms_reset_state\n");
       break;
-    case ms_wait:
-      printf("ms_wait\n");
+    case ms_wait_1s:
+      printf("ms_wait_1s\n");
       break;
     case ms_stop:
       printf("ms_stop\n");

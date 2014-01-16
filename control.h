@@ -9,7 +9,7 @@
 #include "constants.h"
 
 enum { mot_stop = 1, mot_move, mot_move_bwd, mot_follow_black, mot_follow_white, mot_follow_wall_left, mot_turn };
-enum { ms_init, ms_fwd, ms_fwd_time, ms_bwd, ms_fwd_fixed, ms_fwd_cross_black, ms_fwd_cross_white, ms_fwd_ir_left, ms_fwd_ir_wall_left, ms_fwd_ir_wall_right, ms_follow_white, ms_follow_white_cross_black, ms_follow_black, ms_follow_black_gate_left, ms_follow_black_gate_left_right, ms_follow_black_box, ms_follow_black_cross, ms_follow_wall_left, ms_turn_left, ms_turn_right, ms_turn_around, ms_center_line_black, ms_center_line_black_left, ms_center_line_black_right, ms_ir_dist, ms_gate_left, ms_gate_left_right, ms_center_angle, ms_reset_state, ms_wait, ms_stop, ms_end };
+enum { ms_init, ms_fwd, ms_fwd_time, ms_bwd, ms_fwd_fixed, ms_fwd_cross_black, ms_fwd_cross_white, ms_fwd_ir_left, ms_fwd_ir_wall_left, ms_fwd_ir_wall_right, ms_follow_white, ms_follow_white_cross_black, ms_follow_black, ms_follow_black_gate_left, ms_follow_black_gate_left_right, ms_follow_black_box, ms_follow_black_cross, ms_follow_wall_left, ms_turn_left, ms_turn_right, ms_turn_around, ms_center_line_black, ms_center_line_black_left, ms_center_line_black_right, ms_ir_dist, ms_gate_left, ms_gate_left_right, ms_center_angle, ms_reset_state, ms_wait_1s, ms_stop, ms_end };
 
 typedef struct { // Input signals
   int left_enc, right_enc; // encoderticks
@@ -44,10 +44,10 @@ typedef struct { // Input
 
 typedef struct {
   int state, oldstate;
-  int programState[100];
-  double dist[100];
-  double speed[100];
-  double angle[100];
+  int programState[200];
+  double dist[200];
+  double speed[200];
+  double angle[200];
   int time;
 } smtype;
 
