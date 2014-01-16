@@ -5,7 +5,7 @@
 #define START_CROSS_DIST 1.225 /* Distance from start to the first cross */
 
 #define IR_GATE_DIST 0.40 /* Distance from robot to gate on the loose */
-#define GATE_DIST 0.55 /* Distance between two legs of a gate */
+#define GATE_DIST 0.55 /* Distance between the two legs of a gate */
 
 #define TURN_ANGLE 0.005
 
@@ -46,6 +46,7 @@
 #define WHITE_VALUE 91.021250
 
 #define BLACK_LINE_FOUND_VALUE 0.2 /* If all the line sensors are below this value, then the robot must have crossed a black line */
+#define WHITE_LINE_FOUND_VALUE 0.8 /* If all the line sensors are above this value, then the robot must have crossed a white line */
 
 /*****************************************
 * odometry

@@ -53,8 +53,6 @@ motiontype mot;
 int32_t timer;
 double V_old, omega_old;
 
-enum { ms_init, ms_fwd, ms_bwd, ms_fwd_fixed, ms_fwd_cross, ms_fwd_ir_left, ms_fwd_ir_wall_left, ms_follow_black, ms_follow_black_ir_left, ms_follow_black_box, ms_follow_black_cross, ms_turn_left, ms_turn_right, ms_turn_around, ms_center_line_black, ms_center_line_black_left, ms_center_line_black_right, ms_ir_dist, ms_gate_left, ms_wall_left, ms_reset_state, ms_wait, ms_stop, ms_end };
-
 int main() {
   int running;
 
@@ -122,13 +120,15 @@ int main() {
     mission.speed[i] = 0.3; // Set default speed to 0.3 m/s
   for (i = 0; i < sizeof(mission.dist) / sizeof(mission.dist[0]); i++)
     mission.dist[i] = 10; // The default value is just 10m, so we don't have to set it every time
+  for (i = 0; i < sizeof(mission.angle) / sizeof(mission.angle[0]); i++)
+    mission.angle[i] = M_PI/2.0; // Defaults to ±90 degress
 
   ir.ignoreObs = 1; // Ignore all obstacles by default
   uint8_t stateIndex = 0; // Reset state index
 
 /************************** Program state **************************/
 
-#if 0
+#if 1
 goto Start;
 
   /********* Distance measurement *********/
@@ -159,7 +159,7 @@ goto Start;
   /* Push box */
   mission.programState[stateIndex++] = ms_follow_black_cross;
   mission.dist[stateIndex] = 0.15;
-  mission.programState[stateIndex++] = ms_fwd;
+  mission.programState[stateIndex++] = ms_fwd_time;
   mission.dist[stateIndex] = 1.20;
   mission.programState[stateIndex++] = ms_bwd;
 
@@ -175,40 +175,68 @@ goto Start;
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_turn_left;
   mission.speed[stateIndex] = 0.20;
+
   mission.programState[stateIndex++] = ms_center_line_black;
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_follow_black_cross;
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_fwd_fixed;
+
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_follow_black_cross;
 
   /********* Gate on the loose *********/
+#if 1
+  mission.dist[stateIndex] = 0.30;
+  mission.speed[stateIndex] = 0.20;
+  mission.programState[stateIndex++] = ms_fwd;
+
+  mission.angle[stateIndex] = 40.0 * M_PI/180;
+  mission.speed[stateIndex] = 0.20;
+  mission.programState[stateIndex++] = ms_turn_right;
+#else
   mission.speed[stateIndex] = 0.20;
   mission.dist[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_follow_black;
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_center_line_black;
+#endif
 
+Start:
   /* Look for gate */
+#if 1
+  /*mission.speed[stateIndex] = 0.20;
+  mission.programState[stateIndex++] = ms_follow_black_cross;*/
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_follow_black_gate_left;
+#else
   mission.dist[stateIndex] = 0.5;
   mission.speed[stateIndex] = 0.15;
   mission.programState[stateIndex++] = ms_fwd;
   mission.dist[stateIndex] = 2.0;
   mission.speed[stateIndex] = 0.15;
   mission.programState[stateIndex++] = ms_gate_left;
+#endif
   mission.dist[stateIndex] = 0.10;
   mission.speed[stateIndex] = 0.15;
   mission.programState[stateIndex++] = ms_fwd;
+
   mission.dist[stateIndex] = GATE_DIST - 0.10;
   mission.speed[stateIndex] = 0.15;
+#if 1
+  mission.programState[stateIndex++] = ms_follow_black_gate_left;
+#else
   mission.programState[stateIndex++] = ms_gate_left;
+#endif
+
   /* Go through gate */
-  mission.dist[stateIndex] = 0.05;
+  mission.dist[stateIndex] = 0.02;
   mission.speed[stateIndex] = 0.15;
   mission.programState[stateIndex++] = ms_bwd;
   mission.speed[stateIndex] = 0.15;
   mission.programState[stateIndex++] = ms_turn_left;
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_gate_left_right;
   mission.dist[stateIndex] = 0.50;
   mission.speed[stateIndex] = 0.15;
   mission.programState[stateIndex++] = ms_fwd;
@@ -219,9 +247,8 @@ goto Start;
   mission.programState[stateIndex++] = ms_fwd_fixed;
   mission.programState[stateIndex++] = ms_turn_left;
 
-Start:
   mission.speed[stateIndex] = 0.20;
-  mission.programState[stateIndex++] = ms_follow_black_ir_left;
+  mission.programState[stateIndex++] = ms_follow_black_gate_left_right;
   mission.speed[stateIndex] = 0.20;
   mission.dist[stateIndex] = 0.50;
   mission.programState[stateIndex++] = ms_fwd;
@@ -239,13 +266,16 @@ Start:
   mission.programState[stateIndex++] = ms_wait;
 
   /* Gate found */
-  mission.dist[stateIndex] = 0.35;
+  mission.dist[stateIndex] = 0.40;
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_fwd;
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_turn_left;
+  mission.dist[stateIndex] = 0.10;
   mission.speed[stateIndex] = 0.20;
-  mission.programState[stateIndex++] = ms_gate_left;
+  mission.programState[stateIndex++] = ms_bwd;
+  mission.speed[stateIndex] = 0.20;
+  mission.programState[stateIndex++] = ms_gate_left_right;
   mission.speed[stateIndex] = 0.20;
   mission.dist[stateIndex] = 0.80;
   mission.programState[stateIndex++] = ms_fwd;
@@ -255,6 +285,7 @@ Start:
   mission.programState[stateIndex++] = ms_turn_left;
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_fwd_cross;
+  mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_fwd_fixed;
   mission.programState[stateIndex++] = ms_turn_left;
   mission.speed[stateIndex] = 0.20;
@@ -334,6 +365,17 @@ Start:
           mission.state = mission.programState[++stateIndex];
         break;
 
+      case ms_fwd_time:;
+        static int32_t timer;
+        if (mission.time == 0)
+          timer = *tick->data;
+        if (fwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time) || (*tick->data - timer > (mission.dist[stateIndex]/mission.speed[stateIndex]) * 300.0)) {
+          if (*tick->data - timer > (mission.dist[stateIndex]/mission.speed[stateIndex]) * 300.0)
+            printf("Aborting %d %f\n", *tick->data - timer, (mission.dist[stateIndex]/mission.speed[stateIndex]) * 300.0);
+          mission.state = mission.programState[++stateIndex];
+        }
+        break;
+
       case ms_bwd:
         if (bwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time))
           mission.state = mission.programState[++stateIndex];
@@ -359,11 +401,6 @@ Start:
           mission.state = mission.programState[++stateIndex];
         break;
 
-      case ms_follow_black_ir_left:
-        if (followBlackLine(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time) || ir.value[0] < 0.20)
-          mission.state = mission.programState[++stateIndex];
-        break;
-
       case ms_follow_black_box:
         if (followBlackLine(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time) || ir.value[2] < 0.20)
           mission.state = mission.programState[++stateIndex];
@@ -375,12 +412,12 @@ Start:
         break;
 
       case ms_turn_left:
-        if (turn(&mot, M_PI/2.0, mission.speed[stateIndex], mission.time))
+        if (turn(&mot, mission.angle[stateIndex], mission.speed[stateIndex], mission.time))
           mission.state = mission.programState[++stateIndex];
         break;
 
       case ms_turn_right:
-        if (turn(&mot, -M_PI/2.0, mission.speed[stateIndex], mission.time))
+        if (turn(&mot, -mission.angle[stateIndex], mission.speed[stateIndex], mission.time))
           mission.state = mission.programState[++stateIndex];
         break;
 
@@ -396,14 +433,35 @@ Start:
           mission.state = mission.programState[++stateIndex];
         break;
 
+      case ms_gate_left_right:
+        if (fwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time))
+          mission.programState[stateIndex] = ms_stop;
+        else if (ir.value[0] < IR_GATE_DIST || ir.value[4] < IR_GATE_DIST) // Check if the left or right sensor is below the threshold
+          mission.state = mission.programState[++stateIndex];
+        break;
+
+      case ms_follow_black_gate_left:
+        if (followBlackLine(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time))
+          mission.programState[stateIndex] = ms_stop;
+        else if (ir.value[0] < IR_GATE_DIST)
+          mission.state = mission.programState[++stateIndex];
+        break;
+
+      case ms_follow_black_gate_left_right:
+        if (followBlackLine(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time))
+          mission.programState[stateIndex] = ms_stop;
+        else if (ir.value[0] < IR_GATE_DIST || ir.value[4] < IR_GATE_DIST) // Check if the left or right sensor is below the threshold
+          mission.state = mission.programState[++stateIndex];
+        break;
+
       case ms_reset_state: // This is just used so the same state can be called twice
         mission.state = mission.programState[++stateIndex];
         break;
 
-        if (line.center_mass_neighbors < 4)
-        else if (line.center_mass_neighbors > 5)
       case ms_center_line_black:
+        if (line.center_mass_neighbors[0] < 4)
           mission.state = ms_center_line_black_right;
+        else if (line.center_mass_neighbors[0] > 5)
           mission.state = ms_center_line_black_left;
         else // The line is already in the center
           mission.state = mission.programState[++stateIndex];
@@ -412,14 +470,14 @@ Start:
       case ms_center_line_black_right:
         if (turn(&mot, -M_PI/2, mission.speed[stateIndex], mission.time))
           mission.state = ms_turn_left;
-        else if (line.center_mass_neighbors >= 4.5)
+        else if (line.center_mass_neighbors[0] >= 4.5)
           mission.state = mission.programState[++stateIndex];
         break;
 
       case ms_center_line_black_left:
         if (turn(&mot, M_PI/2, mission.speed[stateIndex], mission.time))
           mission.state = ms_turn_right;
-        else if (line.center_mass_neighbors <= 4.5)
+        else if (line.center_mass_neighbors[0] <= 4.5)
           mission.state = mission.programState[++stateIndex];
         break;
 
@@ -581,7 +639,7 @@ Start:
     speedl->updated = speedr->updated = 1;
 #endif
 
-    printf("X: %f, Y: %f Phi: %f\n", getX(), getY(), getPhi());
+    //printf("X: %f, Y: %f Phi: %f\n", getX(), getY(), getPhi());
 
     /* Stop if keyboard is activated */
     int arg;

@@ -8,7 +8,8 @@
 
 #include "constants.h"
 
-enum { mot_stop = 1, mot_move, mot_move_bwd, mot_follow_black, mot_turn };
+enum { mot_stop = 1, mot_move, mot_move_bwd, mot_follow_black, mot_follow_white, mot_turn };
+enum { ms_init, ms_fwd, ms_fwd_time, ms_bwd, ms_fwd_fixed, ms_fwd_cross, ms_fwd_ir_left, ms_fwd_ir_wall_left, ms_follow_black, ms_follow_black_gate_left, ms_follow_black_gate_left_right, ms_follow_black_box, ms_follow_black_cross, ms_turn_left, ms_turn_right, ms_turn_around, ms_center_line_black, ms_center_line_black_left, ms_center_line_black_right, ms_ir_dist, ms_gate_left, ms_gate_left_right, ms_wall_left, ms_reset_state, ms_wait, ms_stop, ms_end };
 
 typedef struct { // Input signals
   int left_enc, right_enc; // encoderticks
@@ -45,6 +46,7 @@ typedef struct {
   int programState[100];
   double dist[100];
   double speed[100];
+  double angle[100];
   int time;
 } smtype;
 
@@ -52,10 +54,10 @@ typedef struct {
   int32_t value_raw[8];
   double value[8];
   uint8_t length;
-  double lowest_val, lowest_val_left, lowest_val_right;
-  uint8_t lowest_pos;
-  uint8_t black_line_found;
-  double center_mass, center_mass_neighbors;
+  double lowest_val, lowest_val_left, lowest_val_right, highest_val, highest_val_left, highest_val_right;
+  uint8_t lowest_pos, highest_pos;
+  uint8_t black_line_found, white_line_found;
+  double center_mass[2], center_mass_neighbors[2]; // First value is for black line and second value is for white line
 } linesensortype;
 
 typedef struct {
@@ -71,6 +73,8 @@ double getXRaw();
 double getY();
 double getYRaw();
 double getPhi();
+
+void printState(int state);
 
 void updateIRSensor(symTableElement *irsensor, irsensortype *p);
 void printIRSensor(irsensortype *p);
@@ -93,6 +97,7 @@ void reset_odo(odotype *p);
 void update_odo(odotype *p);
 void update_motcon(motiontype *p, linesensortype *line);
 int followBlackLine(motiontype *mot, double dist, double speed, int time);
+int followWhiteLine(motiontype *mot, double dist, double speed, int time);
 int fwd(motiontype *mot, double dist, double speed, int time);
 int bwd(motiontype *mot, double dist, double speed, int time);
 int turn(motiontype *mot, double angle, double speed, int time);
