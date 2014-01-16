@@ -1,6 +1,7 @@
 #include "control.h"
 
 double dUl, dUr, dU, dPhi, x, y, phi;
+double follow_error_old;
 
 double getX() {
   return x / DIST_CAL;
@@ -138,7 +139,7 @@ void updateLineSensor(symTableElement *linesensor, linesensortype *p) {
     }
   }
 
-  if (p->lowest_pos > 0) //Making sure the index of the lowest sensor reading is not out of bounds
+  if (p->lowest_pos > 0) // Making sure the index of the lowest sensor reading is not out of bounds
     p->lowest_val_right = p->value[p->lowest_pos - 1];
   else
     p->lowest_val_right = -1;
@@ -147,7 +148,7 @@ void updateLineSensor(symTableElement *linesensor, linesensortype *p) {
   else
     p->lowest_val_left = -1;
 
-  if (p->highest_pos > 0) //Making sure the index of the highest sensor reading is not out of bounds
+  if (p->highest_pos > 0) // Making sure the index of the highest sensor reading is not out of bounds
     p->highest_val_right = p->value[p->highest_pos - 1];
   else
     p->highest_val_right = -1;
@@ -156,10 +157,9 @@ void updateLineSensor(symTableElement *linesensor, linesensortype *p) {
   else
     p->highest_val_left = -1;
 
-
-  for (i=0; i<= 7; i++) { //Checking if we are crossing a black line 
-    if (p->value[i] > BLACK_LINE_FOUND_VALUE)
-	break;
+  for (i = 0; i <= 7; i++) { // Checking if we are crossing a black line
+  	if (p->value[i] > BLACK_LINE_FOUND_VALUE)
+  		break;
   }
   if (i == 8) {
     //printf("Black line found\n");
@@ -168,9 +168,9 @@ void updateLineSensor(symTableElement *linesensor, linesensortype *p) {
   else
     p->black_line_found =0;
 
-for (i=0; i<= 7; i++) { //Checking if we are crossing a white line
-    if (p->value[i] < WHITE_LINE_FOUND_VALUE)
-	break;
+  for (i = 0; i <= 7; i++) { //Checking if we are crossing a white line
+  	if (p->value[i] < WHITE_LINE_FOUND_VALUE)
+  		break;
   }
   if (i == 8) {
     //printf("White line found\n");
@@ -179,62 +179,41 @@ for (i=0; i<= 7; i++) { //Checking if we are crossing a white line
   else
     p->white_line_found =0;
 
-  uint8_t j;
   double sumTop = 0, sumBot = 0;
-  //Finding the center of mass for the lowest sensor and the two neighbors on a black line
-  for (j = (p->lowest_pos > 0 ? p->lowest_pos - 1 : p->lowest_pos); j <= (p->lowest_pos < p->length - 1 ? p->lowest_pos + 1 : p->lowest_pos); j++) {
-      double intensity =  1 - p->value[j];
-      sumTop += (j + 1) * intensity;
-      sumBot += intensity;
-    }
-    p->center_mass_neighbors[0] = sumTop / sumBot;
+  // Finding the center of mass for the lowest sensor and the two neighbors on a black line
+  for (i = (p->lowest_pos > 0 ? p->lowest_pos - 1 : p->lowest_pos); i <= (p->lowest_pos < p->length - 1 ? p->lowest_pos + 1 : p->lowest_pos); i++) {
+  	double intensity =  1 - p->value[i];
+  	sumTop += (i + 1) * intensity;
+  	sumBot += intensity;
+  }
+  p->center_mass_neighbors[0] = sumTop / sumBot;
 
-    //Finding the center of mass for all sensors on a black line 
-    sumTop = sumBot = 0;
-    for (j = 0; j < p->length; j++) {
-      double intensity = 1 - p->value[j];
-      sumTop += (j + 1) * intensity;
-      sumBot += intensity;
-    }
-    p->center_mass[0] = sumTop / sumBot;
+    // Finding the center of mass for all sensors on a black line
+  sumTop = sumBot = 0;
+  for (i = 0; i < p->length; i++) {
+    double intensity = 1 - p->value[i];
+    sumTop += (i + 1) * intensity;
+    sumBot += intensity;
+  }
+  p->center_mass[0] = sumTop / sumBot;
 
   //Finding the center of mass for the lowest sensor and the two neighbors on a white line
   sumTop = sumBot = 0;
-  for (j = (p->highest_pos > 0 ? p->highest_pos - 1 : p->highest_pos); j <= (p->highest_pos < p->length - 1 ? p->highest_pos + 1 : p->highest_pos); j++) {
-      double intensity = p->value[j];
-      sumTop += (j + 1) * intensity;
-      sumBot += intensity;
-    }
-    p->center_mass_neighbors[1] = sumTop / sumBot;
+  for (i = (p->highest_pos > 0 ? p->highest_pos - 1 : p->highest_pos); i <= (p->highest_pos < p->length - 1 ? p->highest_pos + 1 : p->highest_pos); i++) {
+    double intensity = p->value[i];
+    sumTop += (i + 1) * intensity;
+    sumBot += intensity;
+  }
+  p->center_mass_neighbors[1] = sumTop / sumBot;
 
-  //Finding the center of mass for all sensors on a white line 
-    sumTop = sumBot = 0;
-    for (j = 0; j < p->length; j++) {
-      double intensity = p->value[j];
-      sumTop += (j + 1) * intensity;
-      sumBot += intensity;
-    }
-    p->center_mass[1] = sumTop / sumBot;
-
-  /*for (i = 0; i < 2; i++) {
-    double sumTop = 0, sumBot = 0;
-    for (j = (p->lowest_pos > 0 ? p->lowest_pos - 1 : p->lowest_pos); j <= (p->lowest_pos < p->length - 1 ? p->lowest_pos + 1 : p->lowest_pos); j++) {
-      double intensity = (i == 0 ? 1 - p->value[j] : p->value[j]);
-      sumTop += (j + 1) * intensity;
-      sumBot += intensity;
-    }
-    p->center_mass_neighbors[i] = sumTop / sumBot;
-
-    sumTop = sumBot = 0;
-    for (j = 0; j < p->length; j++) {
-      double intensity = (i == 0 ? 1 - p->value[j] : p->value[j]);
-      sumTop += (j + 1) * intensity;
-      sumBot += intensity;
-    }
-    p->center_mass[i] = sumTop / sumBot;
-  }*/
-
-  
+  // Finding the center of mass for all sensors on a white line
+  sumTop = sumBot = 0;
+  for (i = 0; i < p->length; i++) {
+    double intensity = p->value[i];
+    sumTop += (i + 1) * intensity;
+    sumBot += intensity;
+  }
+  p->center_mass[1] = sumTop / sumBot;
 }
 
 void printLineSensor(linesensortype *p) {
@@ -346,8 +325,8 @@ void update_motcon(motiontype *p, linesensortype *line) {
     p->finished=0;
     switch (p->cmd) {
       case mot_stop:
-	p->curcmd = mot_stop;
-	break;
+      	p->curcmd = mot_stop;
+      	break;
 
       case mot_move:
       case mot_move_bwd:
@@ -397,40 +376,21 @@ void update_motcon(motiontype *p, linesensortype *line) {
       break;
 
     case mot_follow_black:
-      if ((p->right_pos+p->left_pos)/2.0 - p->startpos >= p->dist) {
-        p->finished = 1;
-        p->motorspeed_l = p->motorspeed_r = 0;
-      } else {
-        static double error_old = 0;
-        double error = line->center_mass_neighbors[0] - 4.5;
-        error *= p->speedcmd;
-        double pSpeed = kPfollow * error;
-        double dSpeed = kDfollow * (error - error_old);
-        double speed = pSpeed + dSpeed;
-        error_old = error;
-        //printf("Speed: %f\n", speed);
-        if (speed < 0) {
-          p->motorspeed_l = p->speedcmd - speed;
-          p->motorspeed_r = p->speedcmd + speed;
-        } else {
-          p->motorspeed_l = p->speedcmd - speed;
-          p->motorspeed_r = p->speedcmd + speed;
-        }
-      }
-      break;
-
     case mot_follow_white:
       if ((p->right_pos+p->left_pos)/2.0 - p->startpos >= p->dist) {
         p->finished = 1;
         p->motorspeed_l = p->motorspeed_r = 0;
       } else {
-        static double error_old = 0;
-        double error = line->center_mass_neighbors[1] - 4.5;
+        double error;
+        if (p->curcmd == mot_follow_black)
+        	error = line->center_mass_neighbors[0] - 4.5;
+        else
+        	error = line->center_mass_neighbors[1] - 4.5;
         error *= p->speedcmd;
         double pSpeed = kPfollow * error;
-        double dSpeed = kDfollow * (error - error_old);
+        double dSpeed = kDfollow * (error - follow_error_old);
         double speed = pSpeed + dSpeed;
-        error_old = error;
+        follow_error_old = error;
         //printf("Speed: %f\n", speed);
         if (speed < 0) {
           p->motorspeed_l = p->speedcmd - speed;
@@ -566,6 +526,7 @@ void sm_update(smtype *p) {
     printState(p->state);
     p->time = 0;
     p->oldstate = p->state;
+    follow_error_old = 0;
   } else
     p->time++;
 }
@@ -587,14 +548,23 @@ void printState(int state) {
     case ms_fwd_fixed:
       printf("ms_fwd_fixed\n");
       break;
-    case ms_fwd_cross:
-      printf("ms_fwd_cross\n");
+    case ms_fwd_cross_black:
+      printf("ms_fwd_cross_black\n");
+      break;
+    case ms_fwd_cross_white:
+      printf("ms_fwd_cross_white\n");
       break;
     case ms_fwd_ir_left:
       printf("ms_fwd_ir_left\n");
       break;
     case ms_fwd_ir_wall_left:
       printf("ms_fwd_ir_wall_left\n");
+      break;
+    case ms_follow_white:
+      printf("ms_follow_white\n");
+      break;
+    case ms_follow_white_cross_black:
+      printf("ms_follow_white_cross_black\n");
       break;
     case ms_follow_black:
       printf("ms_follow_black\n");

@@ -127,8 +127,6 @@ int main() {
   uint8_t stateIndex = 0; // Reset state index
 
 /************************** Program state **************************/
-
-#if 1
 goto Start;
 
   /********* Distance measurement *********/
@@ -150,8 +148,13 @@ goto Start;
   mission.programState[stateIndex++] = ms_follow_black_cross;
   mission.programState[stateIndex++] = ms_fwd_fixed;
   mission.programState[stateIndex++] = ms_turn_right;
+
+Start:
+  mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_follow_black_cross;
+  mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_fwd_fixed;
+  mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_follow_black_cross;
   mission.programState[stateIndex++] = ms_fwd_fixed;
   mission.programState[stateIndex++] = ms_turn_right;
@@ -160,12 +163,12 @@ goto Start;
   mission.programState[stateIndex++] = ms_follow_black_cross;
   mission.dist[stateIndex] = 0.15;
   mission.programState[stateIndex++] = ms_fwd_time;
-  mission.dist[stateIndex] = 1.20;
+  mission.dist[stateIndex] = 1.0;
   mission.programState[stateIndex++] = ms_bwd;
 
   /* Go to gate */
   mission.programState[stateIndex++] = ms_turn_right;
-  mission.programState[stateIndex++] = ms_fwd_cross;
+  mission.programState[stateIndex++] = ms_fwd_cross_black;
   mission.programState[stateIndex++] = ms_fwd_fixed;
   mission.programState[stateIndex++] = ms_turn_left;
   mission.programState[stateIndex++] = ms_follow_black_cross;
@@ -202,7 +205,7 @@ goto Start;
   mission.programState[stateIndex++] = ms_center_line_black;
 #endif
 
-Start:
+
   /* Look for gate */
 #if 1
   /*mission.speed[stateIndex] = 0.20;
@@ -243,7 +246,7 @@ Start:
 
   /********* Wall *********/
   mission.programState[stateIndex++] = ms_turn_right;
-  mission.programState[stateIndex++] = ms_fwd_cross;
+  mission.programState[stateIndex++] = ms_fwd_cross_black;
   mission.programState[stateIndex++] = ms_fwd_fixed;
   mission.programState[stateIndex++] = ms_turn_left;
 
@@ -284,7 +287,7 @@ Start:
   /* Go back to track */
   mission.programState[stateIndex++] = ms_turn_left;
   mission.speed[stateIndex] = 0.20;
-  mission.programState[stateIndex++] = ms_fwd_cross;
+  mission.programState[stateIndex++] = ms_fwd_cross_black;
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_fwd_fixed;
   mission.programState[stateIndex++] = ms_turn_left;
@@ -306,18 +309,23 @@ Start:
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_turn_left;
 
-#else
-  for (i = 0; i < 4; i++) {
-    mission.dist[stateIndex] = 3.0;
-    mission.speed[stateIndex] = 0.25;
-    mission.programState[stateIndex++] = ms_fwd;
-    mission.speed[stateIndex] = 0.25;
-    mission.programState[stateIndex++] = ms_turn_left;
-  }
-#endif
+  /* Follow white line */
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_follow_white_cross_black;
+  mission.dist[stateIndex] = 0.10;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_fwd;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_follow_black_cross;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_fwd_fixed;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_turn_right;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_follow_black_box;
 
   /********* The End *********/
-  mission.programState[stateIndex] = ms_end;
+  mission.programState[stateIndex++] = ms_end;
 
 /*******************************************************************/
 
@@ -386,13 +394,28 @@ Start:
           mission.state = mission.programState[++stateIndex];
         break;
 
-      case ms_fwd_cross:
+      case ms_fwd_cross_white:
+        if (fwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time)  || line.white_line_found)
+          mission.state = mission.programState[++stateIndex];
+        break;
+
+      case ms_fwd_cross_black:
         if (fwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time)  || line.black_line_found)
           mission.state = mission.programState[++stateIndex];
         break;
 
       case ms_fwd_ir_wall_left:
         if (fwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time) || ir.value[0] > 0.50)
+          mission.state = mission.programState[++stateIndex];
+        break;
+
+       case ms_follow_white:
+        if (followWhiteLine(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time))
+          mission.state = mission.programState[++stateIndex];
+        break;
+
+       case ms_follow_white_cross_black:
+        if (followWhiteLine(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time) || line.black_line_found)
           mission.state = mission.programState[++stateIndex];
         break;
 
