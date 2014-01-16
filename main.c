@@ -149,7 +149,6 @@ goto Start;
   mission.programState[stateIndex++] = ms_fwd_fixed;
   mission.programState[stateIndex++] = ms_turn_right;
 
-Start:
   mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_follow_black_cross;
   mission.speed[stateIndex] = 0.25;
@@ -252,6 +251,48 @@ Start:
 
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_follow_black_gate_left_right;
+
+#if 0
+  mission.speed[stateIndex] = 0.20;
+  mission.dist[stateIndex] = 0.65;
+  mission.programState[stateIndex++] = ms_fwd;
+  mission.speed[stateIndex] = 0.20;
+  mission.programState[stateIndex++] = ms_turn_left;
+
+  /* Follow wall */
+  mission.dist[stateIndex] = 0.30;
+  mission.speed[stateIndex] = 0.20;
+  mission.programState[stateIndex++] = ms_fwd;
+
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_follow_wall_left;
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_center_angle;
+
+  mission.dist[stateIndex] = 0.10;
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_fwd;
+
+  mission.dist[stateIndex] = GATE_DIST - 0.10;
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_gate_left;
+
+  mission.dist[stateIndex] = 0.02;
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_bwd;
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_turn_left;
+
+  /* Gate found */
+  mission.dist[stateIndex] = 0.10;
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_bwd;
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_gate_left_right;
+  mission.dist[stateIndex] = 0.90;
+  mission.speed[stateIndex] = 0.20;
+  mission.programState[stateIndex++] = ms_fwd;
+#else
   mission.speed[stateIndex] = 0.20;
   mission.dist[stateIndex] = 0.50;
   mission.programState[stateIndex++] = ms_fwd;
@@ -283,8 +324,10 @@ Start:
   mission.dist[stateIndex] = 0.80;
   mission.programState[stateIndex++] = ms_fwd;
   mission.speed[stateIndex] = 0.20;
+#endif
 
   /* Go back to track */
+  mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_turn_left;
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_fwd_cross_black;
@@ -321,6 +364,43 @@ Start:
   mission.programState[stateIndex++] = ms_fwd_fixed;
   mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_turn_right;
+
+Start:
+  /* Open goal */
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_follow_black_box;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_turn_left;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_fwd_ir_wall_right;
+  mission.dist[stateIndex] = 0.35;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_fwd;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_turn_right;
+  mission.dist[stateIndex] = 0.32;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_fwd;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_turn_right;
+  mission.dist[stateIndex] = 0.05;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_fwd;
+  mission.angle[stateIndex] = 40 * M_PI/180;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_turn_right;
+  mission.dist[stateIndex] = 0.35;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_fwd;
+  mission.angle[stateIndex] = 40 * M_PI/180;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_turn_left;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_fwd_cross_black;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_fwd_fixed;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_turn_left;
   mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_follow_black_box;
 
@@ -355,16 +435,16 @@ Start:
     switch (mission.state) {
       case ms_init:
 #if CALIBRATE_LINE_SENSOR
-	if (calibrateLineSensor(&line)) running = 0;
+        if (calibrateLineSensor(&line)) running = 0;
 #elif CALIBRATE_IR_SENSOR_FRONT
-	if (calibrateIRSensorFront(&ir)) running = 0;
+        if (calibrateIRSensorFront(&ir)) running = 0;
 #elif CALIBRATE_IR_SENSOR_LEFT
-	if (calibrateIRSensorLeft(&ir)) running = 0;
+        if (calibrateIRSensorLeft(&ir)) running = 0;
 #elif CALIBRATE_IR_SENSOR_RIGHT
-	if (calibrateIRSensorRight(&ir)) running = 0;
+        if (calibrateIRSensorRight(&ir)) running = 0;
 #else
-      stateIndex = 0;
-      mission.state = mission.programState[stateIndex];
+        stateIndex = 0;
+        mission.state = mission.programState[stateIndex];
 #endif
       break;
 
@@ -409,6 +489,11 @@ Start:
           mission.state = mission.programState[++stateIndex];
         break;
 
+      case ms_fwd_ir_wall_right:
+        if (fwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time) || ir.value[4] > 0.50)
+          mission.state = mission.programState[++stateIndex];
+        break;
+
        case ms_follow_white:
         if (followWhiteLine(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time))
           mission.state = mission.programState[++stateIndex];
@@ -434,6 +519,25 @@ Start:
           mission.state = mission.programState[++stateIndex];
         break;
 
+      case ms_follow_wall_left:
+        if (followWallLeft(&mot, mission.dist[stateIndex], mission.speed[stateIndex], 0.30, mission.time) || ir.value[0] > 0.50)
+          mission.state = mission.programState[++stateIndex];
+        break;
+
+      case ms_center_angle:
+        //printf("Angle: %f %f \n", mot.startAngle, getPhi());
+        if (mot.startAngle < getPhi()) {
+          mission.angle[stateIndex] = getPhi() - mot.startAngle;
+          mission.state = ms_turn_right;
+        }
+        else if (mot.startAngle > getPhi()) {
+          mission.angle[stateIndex] = mot.startAngle - getPhi();
+          mission.state = ms_turn_left;
+        }
+        else // It already aligned properly
+          mission.state = mission.programState[++stateIndex];
+        break;
+
       case ms_turn_left:
         if (turn(&mot, mission.angle[stateIndex], mission.speed[stateIndex], mission.time))
           mission.state = mission.programState[++stateIndex];
@@ -450,29 +554,34 @@ Start:
         break;
 
       case ms_gate_left:
-        if (fwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time))
-          mission.programState[stateIndex] = ms_stop;
-        else if (ir.value[0] < IR_GATE_DIST)
+        //printf("ms_gate_left\n");
+        if (fwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time)) {
+          //printf("ms_gate_left stop\n");
+          mission.state = ms_stop;
+        }
+        else if (ir.value[0] < IR_GATE_DIST) {
+          //printf("ms_gate_left next\n");
           mission.state = mission.programState[++stateIndex];
+        }
         break;
 
       case ms_gate_left_right:
         if (fwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time))
-          mission.programState[stateIndex] = ms_stop;
+          mission.state = ms_stop;
         else if (ir.value[0] < IR_GATE_DIST || ir.value[4] < IR_GATE_DIST) // Check if the left or right sensor is below the threshold
           mission.state = mission.programState[++stateIndex];
         break;
 
       case ms_follow_black_gate_left:
         if (followBlackLine(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time))
-          mission.programState[stateIndex] = ms_stop;
+          mission.state = ms_stop;
         else if (ir.value[0] < IR_GATE_DIST)
           mission.state = mission.programState[++stateIndex];
         break;
 
       case ms_follow_black_gate_left_right:
         if (followBlackLine(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time))
-          mission.programState[stateIndex] = ms_stop;
+          mission.state = ms_stop;
         else if (ir.value[0] < IR_GATE_DIST || ir.value[4] < IR_GATE_DIST) // Check if the left or right sensor is below the threshold
           mission.state = mission.programState[++stateIndex];
         break;
@@ -536,9 +645,6 @@ Start:
         break;
       }
 
-      case ms_wall_left:
-	break;
-
       case ms_wait:;
         static int32_t wait_timer;
         if (mission.time == 0)
@@ -560,13 +666,13 @@ Start:
     /* End of mission  */
     mot.left_pos = odo.left_pos;
     mot.right_pos = odo.right_pos;
-    update_motcon(&mot, &line);
+    update_motcon(&mot, &line, &ir);
 
 #if LIMIT_ACC
     double omegal = Kfl * 100.0 * mot.motorspeed_l;
     double omegar = Kfr * 100.0 * mot.motorspeed_r;
 
-    if (mot.curcmd == mot_move || mot.curcmd == mot_move_bwd) {
+    if (mot.curcmd == mot_move/* || mot.curcmd == mot_move_bwd*/) {
       double V = (omegar * WHEEL_DIAMETER_R + omegal * WHEEL_DIAMETER_L) / 4.0;
       double dtime = (double)(*tick->data - timer) / 100.0; // Tick increment every 10ms
       double acc = (V - V_old) / dtime;

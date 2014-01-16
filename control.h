@@ -8,8 +8,8 @@
 
 #include "constants.h"
 
-enum { mot_stop = 1, mot_move, mot_move_bwd, mot_follow_black, mot_follow_white, mot_turn };
-enum { ms_init, ms_fwd, ms_fwd_time, ms_bwd, ms_fwd_fixed, ms_fwd_cross_black, ms_fwd_cross_white, ms_fwd_ir_left, ms_fwd_ir_wall_left, ms_follow_white, ms_follow_white_cross_black, ms_follow_black, ms_follow_black_gate_left, ms_follow_black_gate_left_right, ms_follow_black_box, ms_follow_black_cross, ms_turn_left, ms_turn_right, ms_turn_around, ms_center_line_black, ms_center_line_black_left, ms_center_line_black_right, ms_ir_dist, ms_gate_left, ms_gate_left_right, ms_wall_left, ms_reset_state, ms_wait, ms_stop, ms_end };
+enum { mot_stop = 1, mot_move, mot_move_bwd, mot_follow_black, mot_follow_white, mot_follow_wall_left, mot_turn };
+enum { ms_init, ms_fwd, ms_fwd_time, ms_bwd, ms_fwd_fixed, ms_fwd_cross_black, ms_fwd_cross_white, ms_fwd_ir_left, ms_fwd_ir_wall_left, ms_fwd_ir_wall_right, ms_follow_white, ms_follow_white_cross_black, ms_follow_black, ms_follow_black_gate_left, ms_follow_black_gate_left_right, ms_follow_black_box, ms_follow_black_cross, ms_follow_wall_left, ms_turn_left, ms_turn_right, ms_turn_around, ms_center_line_black, ms_center_line_black_left, ms_center_line_black_right, ms_ir_dist, ms_gate_left, ms_gate_left_right, ms_center_angle, ms_reset_state, ms_wait, ms_stop, ms_end };
 
 typedef struct { // Input signals
   int left_enc, right_enc; // encoderticks
@@ -39,6 +39,7 @@ typedef struct { // Input
   // internal variables
   double startpos;
   double x0, y0; // Start coordinates
+  double wall_dist; // Distance to wall
 } motiontype;
 
 typedef struct {
@@ -95,9 +96,10 @@ uint8_t calibrateLineSensor(linesensortype *p);
 void update_pos(odotype *p);
 void reset_odo(odotype *p);
 void update_odo(odotype *p);
-void update_motcon(motiontype *p, linesensortype *line);
+void update_motcon(motiontype *p, linesensortype *line, irsensortype *ir);
 int followBlackLine(motiontype *mot, double dist, double speed, int time);
 int followWhiteLine(motiontype *mot, double dist, double speed, int time);
+int followWallLeft(motiontype *mot, double dist, double speed, double wall_dist, int time);
 int fwd(motiontype *mot, double dist, double speed, int time);
 int bwd(motiontype *mot, double dist, double speed, int time);
 int turn(motiontype *mot, double angle, double speed, int time);

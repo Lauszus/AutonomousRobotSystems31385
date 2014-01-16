@@ -320,7 +320,7 @@ void update_odo(odotype *p) {
   p->left_pos += p->left_delta_pos * p->cl;
 }
 
-void update_motcon(motiontype *p, linesensortype *line) {
+void update_motcon(motiontype *p, linesensortype *line, irsensortype *ir) {
   if (p->cmd !=0) {
     p->finished=0;
     switch (p->cmd) {
@@ -332,6 +332,7 @@ void update_motcon(motiontype *p, linesensortype *line) {
       case mot_move_bwd:
       case mot_follow_black:
       case mot_follow_white:
+      case mot_follow_wall_left:
         p->startpos = (p->left_pos + p->right_pos)/2.0;
         p->curcmd = p->cmd;
         break;
@@ -398,6 +399,25 @@ void update_motcon(motiontype *p, linesensortype *line) {
         } else {
           p->motorspeed_l = p->speedcmd - speed;
           p->motorspeed_r = p->speedcmd + speed;
+        }
+      }
+      break;
+
+    case mot_follow_wall_left:
+      if ((p->right_pos+p->left_pos)/2.0 - p->startpos >= p->dist) {
+        p->finished = 1;
+        p->motorspeed_l = p->motorspeed_r = 0;
+      } else {
+        //printf("Dist: %f %f\n", p->wall_dist, ir->value[0]);
+        if (ir->value[0] > p->wall_dist + 0.005) {
+          p->motorspeed_l = p->speedcmd;
+          p->motorspeed_r = p->speedcmd * 1.3;
+        } else if (ir->value[0] < p->wall_dist - 0.005) {
+          p->motorspeed_l = p->speedcmd * 1.3;
+          p->motorspeed_r = p->speedcmd;
+        } else {
+          p->motorspeed_l = p->speedcmd;
+          p->motorspeed_r = p->speedcmd;
         }
       }
       break;
@@ -483,6 +503,20 @@ int followWhiteLine(motiontype *mot, double dist, double speed, int time) {
      return mot->finished;
 }
 
+int followWallLeft(motiontype *mot, double dist, double speed, double wall_dist, int time) {
+   if (time == 0) {
+     mot->cmd = mot_follow_wall_left;
+     mot->speedcmd = speed;
+     mot->dist = dist * DIST_CAL;
+     mot->startAngle = phi; // Reset angle
+     mot->wall_dist = wall_dist;
+     mot->x0 = x;
+     mot->y0 = y;
+     return 0;
+   } else
+     return mot->finished;
+}
+
 int fwd(motiontype *mot, double dist, double speed, int time) {
    if (time == 0) {
      mot->cmd = mot_move;
@@ -560,6 +594,9 @@ void printState(int state) {
     case ms_fwd_ir_wall_left:
       printf("ms_fwd_ir_wall_left\n");
       break;
+    case ms_fwd_ir_wall_right:
+      printf("ms_fwd_ir_wall_right\n");
+      break;
     case ms_follow_white:
       printf("ms_follow_white\n");
       break;
@@ -580,6 +617,9 @@ void printState(int state) {
       break;
     case ms_follow_black_cross:
       printf("ms_follow_black_cross\n");
+      break;
+    case ms_follow_wall_left:
+      printf("ms_follow_wall_left\n");
       break;
     case ms_turn_left:
       printf("ms_turn_left\n");
@@ -608,8 +648,8 @@ void printState(int state) {
     case ms_gate_left_right:
       printf("ms_gate_left_right\n");
       break;
-    case ms_wall_left:
-      printf("ms_wall_left\n");
+    case ms_center_angle:
+      printf("ms_center_angle\n");
       break;
     case ms_reset_state:
       printf("ms_reset_state\n");
