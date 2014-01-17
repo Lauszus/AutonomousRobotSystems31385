@@ -4,12 +4,12 @@
 #define IR_LIN_DIST 0.06 /* Distance between IR sensors and line sensor */
 #define START_CROSS_DIST 1.225 /* Distance from start to the first cross */
 
-#define IR_GATE_DIST 0.40 /* Distance from robot to gate on the loose */
+#define IR_GATE_DIST 0.40 /* Distance from robot to a gate */
 #define GATE_DIST 0.55 /* Distance between the two legs of a gate */
 
 #define TURN_ANGLE 0.005
 
-#define DIST_CAL ((300.0/285.0)) /* *(300/298.5)) */ /* Absolute distance constant */
+#define DIST_CAL (300.0/285.0) /* Absolute distance constant */
 #define kV 2.0 /* Constant in angular controller */
 #define kTurn 10.0 /* Turning limiting constant */
 #define Kfl 0.314245 /* Conversion from ticks to m for left encoder */

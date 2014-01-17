@@ -233,7 +233,7 @@ int main() {
   mission.programState[stateIndex++] = ms_center_line_black;
 #endif
 
-
+//Start:
   /* Look for gate */
 #if 1
   /*mission.speed[stateIndex] = 0.20;
@@ -248,6 +248,36 @@ int main() {
   mission.speed[stateIndex] = 0.15;
   mission.programState[stateIndex++] = ms_gate_left;
 #endif
+
+#if 1
+  mission.dist[stateIndex] = 0.45;
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_follow_black;
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_center_line_black;
+  mission.programState[stateIndex++] = ms_stop;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_turn_left;
+  mission.dist[stateIndex] = 0.80;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_fwd;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_turn_left;
+  mission.dist[stateIndex] = 0.50;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_fwd;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_turn_left;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_fwd_cross_black;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_fwd_fixed;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_turn_left;
+
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_follow_black_cross;
+#else
   mission.dist[stateIndex] = 0.10;
   mission.speed[stateIndex] = 0.10;
   mission.programState[stateIndex++] = ms_fwd;
@@ -264,6 +294,7 @@ int main() {
   mission.dist[stateIndex] = 0.04;
   mission.speed[stateIndex] = 0.15;
   mission.programState[stateIndex++] = ms_bwd;
+
   mission.speed[stateIndex] = 0.15;
   mission.programState[stateIndex++] = ms_turn_left;
   mission.speed[stateIndex] = 0.15;
@@ -277,6 +308,8 @@ int main() {
   mission.programState[stateIndex++] = ms_turn_right;
   mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_fwd_cross_black;
+#endif
+
   mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_fwd_fixed;
   mission.speed[stateIndex] = 0.25;
@@ -407,7 +440,6 @@ int main() {
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_turn_left;
 
-//Start:
   /* Follow white line */
   mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_follow_white_cross_black;
@@ -468,7 +500,7 @@ int main() {
     mission.programState[stateIndex++] = ms_wait_1s;
   }
 
-  /********* Back to start *********/
+  /********* Return to home *********/
   mission.dist[stateIndex] = 0.7;
   mission.speed[stateIndex] = 0.15;
   mission.programState[stateIndex++] = ms_bwd;
@@ -497,9 +529,6 @@ int main() {
   mission.programState[stateIndex++] = ms_follow_black;
   mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_turn_around;
-  mission.dist[stateIndex] = 0.30;
-  mission.speed[stateIndex] = 0.25;
-  mission.programState[stateIndex++] = ms_bwd;
   mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_follow_black_cross;
 
@@ -634,7 +663,7 @@ int main() {
         break;
 
       case ms_follow_wall_left:
-        if (followWallLeft(&mot, mission.dist[stateIndex], mission.speed[stateIndex], 0.30, mission.time) || ir.value[0] > 0.50)
+        if (followWallLeft(&mot, mission.dist[stateIndex], mission.speed[stateIndex], 0.30, mission.time))
           mission.state = mission.programState[++stateIndex];
         break;
 
