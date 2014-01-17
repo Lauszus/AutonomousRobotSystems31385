@@ -1,6 +1,22 @@
-/*
- * An example SMR program.
- *
+/* Copyright (C) 2014 Kristian Lauszus, TKJ Electronics and Mads Bornebusch. All rights reserved.
+
+ This software may be distributed and modified under the terms of the GNU
+ General Public License version 2 (GPL2) as published by the Free Software
+ Foundation and appearing in the file GPL2.TXT included in the packaging of
+ this file. Please note that GPL2 Section 2[b] requires that all works based
+ on this software must also be made publicly available under the terms of
+ the GPL2 ("Copyleft").
+
+ Contact information
+ -------------------
+
+ Kristian Lauszus, TKJ Electronics
+ Web      :  http://www.tkjelectronics.com
+ e-mail   :  kristianl@tkjelectronics.com
+
+ Mads Bornebusch
+ Web      :  http://www.tkjelectronics.com
+ e-mail   :  mads.bornebusch@gmail.com
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -310,16 +326,36 @@ int main() {
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_fwd;
 #else
+  mission.dist[stateIndex] = 0.65;
   mission.speed[stateIndex] = 0.20;
-  mission.dist[stateIndex] = 0.50;
+#if 1
   mission.programState[stateIndex++] = ms_fwd;
+#else
+  mission.programState[stateIndex++] = ms_follow_black;
+
+  mission.programState[stateIndex++] = ms_stop;
+  mission.programState[stateIndex++] = ms_wait_1s;
+
+  mission.speed[stateIndex] = 0.10;
+  mission.programState[stateIndex++] = ms_center_line_black;
+#endif
+  mission.programState[stateIndex++] = ms_stop;
+  mission.programState[stateIndex++] = ms_wait_1s;
+
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_turn_left;
 
   /* Follow wall */
-  mission.dist[stateIndex] = 0.50;
+  mission.dist[stateIndex] = 0.20;
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_fwd;
+
+  mission.dist[stateIndex] = 0.70;
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_follow_wall_left;
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_center_angle;
+
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_fwd_ir_wall_left;
 
@@ -332,13 +368,14 @@ int main() {
   mission.programState[stateIndex++] = ms_fwd;
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_turn_left;
+
   mission.dist[stateIndex] = 0.10;
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_bwd;
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_gate_left_right;
   mission.speed[stateIndex] = 0.20;
-  mission.dist[stateIndex] = 0.75;
+  mission.dist[stateIndex] = 0.85;
   mission.programState[stateIndex++] = ms_fwd;
   mission.speed[stateIndex] = 0.20;
 #endif
@@ -432,7 +469,7 @@ int main() {
   }
 
   /********* Back to start *********/
-  mission.dist[stateIndex] = 0.8;
+  mission.dist[stateIndex] = 0.7;
   mission.speed[stateIndex] = 0.15;
   mission.programState[stateIndex++] = ms_bwd;
   mission.speed[stateIndex] = 0.15;
@@ -525,12 +562,12 @@ int main() {
         break;
 
       case ms_fwd_time:;
-        static int32_t timer;
+        static int32_t dtimer;
         if (mission.time == 0)
-          timer = *tick->data;
-        if (fwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time) || (*tick->data - timer > (mission.dist[stateIndex]/mission.speed[stateIndex]) * 300.0)) {
-          if (*tick->data - timer > (mission.dist[stateIndex]/mission.speed[stateIndex]) * 300.0)
-            printf("Aborting %d %f\n", *tick->data - timer, (mission.dist[stateIndex]/mission.speed[stateIndex]) * 300.0);
+          dtimer = *tick->data;
+        if (fwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time) || (*tick->data - dtimer > (mission.dist[stateIndex]/mission.speed[stateIndex]) * 300.0)) {
+          if (*tick->data - dtimer > (mission.dist[stateIndex]/mission.speed[stateIndex]) * 300.0)
+            printf("Aborting %d %f\n", *tick->data - dtimer, (mission.dist[stateIndex]/mission.speed[stateIndex]) * 300.0);
           mission.state = mission.programState[++stateIndex];
         }
         break;
@@ -616,6 +653,7 @@ int main() {
         break;
 
       case ms_turn_left:
+        //printf("Angle: %f\n", mission.angle[stateIndex]);
         if (turn(&mot, mission.angle[stateIndex], mission.speed[stateIndex], mission.time))
           mission.state = mission.programState[++stateIndex];
         break;
@@ -678,14 +716,14 @@ int main() {
 
       case ms_center_line_black_right:
         if (turn(&mot, -M_PI/2, mission.speed[stateIndex], mission.time))
-          mission.state = ms_turn_left;
+          mission.state = ms_center_line_black_left;
         else if (line.center_mass_neighbors[0] >= 4.5)
           mission.state = mission.programState[++stateIndex];
         break;
 
       case ms_center_line_black_left:
         if (turn(&mot, M_PI/2, mission.speed[stateIndex], mission.time))
-          mission.state = ms_turn_right;
+          mission.state = ms_center_line_black_right;
         else if (line.center_mass_neighbors[0] <= 4.5)
           mission.state = mission.programState[++stateIndex];
         break;
@@ -757,7 +795,7 @@ int main() {
 
     if (mot.curcmd == mot_move || mot.curcmd == mot_move_bwd) {
       double V = (omegar * WHEEL_DIAMETER_R + omegal * WHEEL_DIAMETER_L) / 4.0;
-      double dtime = (double)(*tick->data - timer) / 100.0; // Tick increment every 10ms
+      double dtime = (double)(*tick->data - timer) / 100.0; // Tick increments every 10ms
       double acc = (V - V_old) / dtime;
 
       if (acc > 0.5) {
@@ -788,7 +826,7 @@ int main() {
       //printf("X: %f, Y: %f Phi: %f Acc: %f V: %f Vmax: %f dV: %f Diff: %f Omega: %f, %f\n", getX(), getY(), getPhi(), acc, V, Vmax, dV, diff, omegal, omegar);
    } else if (mot.curcmd == mot_turn) {
       double omega = (omegar * WHEEL_DIAMETER_R - omegal * WHEEL_DIAMETER_L) / (2 * WHEEL_SEPARATION); // This is actually angular velocity
-      double dtime = (double)(*tick->data - timer) / 100.0; // Tick increment every 10ms
+      double dtime = (double)(*tick->data - timer) / 100.0; // Tick increments every 10ms
       double omegaAcc = (omega - omega_old) / dtime;
 
       if (omegaAcc > 0.5) {
@@ -812,7 +850,11 @@ int main() {
       omega_old = omega;
       V_old = 0;
       //printf("X: %f, Y: %f Phi: %f OmegaAcc: %f Omega: %f, %f, %f Diff: %f, omegaMax: %f\n", getX(), getY(), getPhi(), omegaAcc, omegal, omegar, omega, diff, omegaMax);
+    } else {
+      V_old = 0;
+      omega_old = 0;
     }
+
     double outputl = omegal / Kfl;
     double outputr = omegar / Kfr;
 
@@ -829,9 +871,9 @@ int main() {
       uint8_t i;
       for (i = 0; i < ir.length - 2; i++) {
         if (ir.value[i + 1] < (double)AVOID_OBSTACLES_DIST / 100) {
-	  printf("STOP %f\n", ir.value[i + 1]);
-	  stop = 1;
-	  break;
+          printf("STOP %f\n", ir.value[i + 1]);
+          stop = 1;
+          break;
         }
       }
     }

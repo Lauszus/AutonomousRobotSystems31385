@@ -484,6 +484,7 @@ int followBlackLine(motiontype *mot, double dist, double speed, int time) {
      mot->cmd = mot_follow_black;
      mot->speedcmd = speed;
      mot->dist = dist * DIST_CAL;
+     mot->startAngle = phi; // Reset angle
      mot->x0 = x;
      mot->y0 = y;
      return 0;
@@ -496,6 +497,7 @@ int followWhiteLine(motiontype *mot, double dist, double speed, int time) {
      mot->cmd = mot_follow_white;
      mot->speedcmd = speed;
      mot->dist = dist * DIST_CAL;
+     mot->startAngle = phi; // Reset angle
      mot->x0 = x;
      mot->y0 = y;
      return 0;
