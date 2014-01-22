@@ -1,8 +1,7 @@
 #ifndef _constants_h_
 #define _constants_h_
 
-#define IR_LIN_DIST 0.06 /* Distance between IR sensors and line sensor */
-#define START_CROSS_DIST 1.225 /* Distance from start to the first cross */
+#define IR_WHEEL_DIST 0.193 /* Distance between IR sensors and the wheel base */
 
 #define IR_GATE_DIST 0.40 /* Distance from robot to a gate */
 #define GATE_DIST 0.55 /* Distance between the two legs of a gate */

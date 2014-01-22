@@ -18,6 +18,7 @@
  Web      :  http://www.tkjelectronics.com
  e-mail   :  mads.bornebusch@gmail.com
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -68,6 +69,7 @@ motiontype mot;
 
 int32_t timer;
 double V_old, omega_old;
+double startYDist;
 
 int main() {
   int running;
@@ -146,12 +148,18 @@ int main() {
 //goto Start;
 
   /********* Distance measurement *********/
-  mission.dist[stateIndex] = 1.0;
-  mission.programState[stateIndex++] = ms_follow_black;
   mission.speed[stateIndex] = 0.15;
-  mission.programState[stateIndex++] = ms_follow_black_cross;
-  mission.programState[stateIndex++] = ms_stop;
+  mission.dist[stateIndex] = 0.7;
+  mission.programState[stateIndex++] = ms_follow_black;
+  mission.speed[stateIndex] = 0.10;
   mission.programState[stateIndex++] = ms_wait_1s;
+  mission.speed[stateIndex] = 0.15;
+  mission.dist[stateIndex] = 0.33;
+  mission.programState[stateIndex++] = ms_fwd;
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_center_angle_first;
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_center_line_black;
   mission.speed[stateIndex] = 0.15;
   mission.programState[stateIndex++] = ms_follow_black_box;
   mission.programState[stateIndex++] = ms_stop;
@@ -161,23 +169,18 @@ int main() {
   /********* Box gate **********/
   /* Go to gate */
   mission.speed[stateIndex] = 0.25;
-  mission.programState[stateIndex++] = ms_turn_around;
-  mission.speed[stateIndex] = 0.25;
-  mission.programState[stateIndex++] = ms_follow_black_cross;
-  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_turn_left;
+  mission.programState[stateIndex++] = ms_fwd_cross_black;
   mission.programState[stateIndex++] = ms_fwd_fixed;
-  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_turn_right;
+  mission.programState[stateIndex++] = ms_follow_black_cross;
+  mission.programState[stateIndex++] = ms_turn_around;
+  mission.dist[stateIndex] = 0.7;
+  mission.programState[stateIndex++] = ms_follow_black;
   mission.programState[stateIndex++] = ms_turn_right;
 
-  mission.speed[stateIndex] = 0.25;
-  mission.programState[stateIndex++] = ms_follow_black_cross;
-  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_fwd_cross_black;
   mission.programState[stateIndex++] = ms_fwd_fixed;
-  mission.speed[stateIndex] = 0.25;
-  mission.programState[stateIndex++] = ms_follow_black_cross;
-  mission.speed[stateIndex] = 0.25;
-  mission.programState[stateIndex++] = ms_fwd_fixed;
-  mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_turn_right;
 
   /* Push box */
@@ -225,6 +228,28 @@ int main() {
   mission.angle[stateIndex] = 40.0 * M_PI/180;
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_turn_right;
+
+//Start:
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_follow_black_cross;
+
+#if 0
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_fwd_fixed;
+#else
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_fwd_fixed;
+  mission.speed[stateIndex] = 0.10;
+  mission.programState[stateIndex++] = ms_center_line_black;
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_turn_left;
+  mission.dist[stateIndex] = 0.15;
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_fwd;
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_turn_right;
+#endif
+
 #else
   mission.speed[stateIndex] = 0.20;
   mission.dist[stateIndex] = 0.20;
@@ -233,13 +258,20 @@ int main() {
   mission.programState[stateIndex++] = ms_center_line_black;
 #endif
 
-//Start:
   /* Look for gate */
+#if 0
+
 #if 1
   /*mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_follow_black_cross;*/
   mission.speed[stateIndex] = 0.10;
   mission.programState[stateIndex++] = ms_follow_black_gate_left;
+  mission.dist[stateIndex] = 0.10;
+  mission.speed[stateIndex] = 0.10;
+  mission.programState[stateIndex++] = ms_bwd;
+  mission.dist[stateIndex] = 0.15;
+  mission.speed[stateIndex] = 0.10;
+  mission.programState[stateIndex++] = ms_follow_black_gate_left_check;
 #else
   mission.dist[stateIndex] = 0.5;
   mission.speed[stateIndex] = 0.15;
@@ -274,7 +306,6 @@ int main() {
   mission.programState[stateIndex++] = ms_fwd_fixed;
   mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_turn_left;
-
   mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_follow_black_cross;
 #else
@@ -310,7 +341,44 @@ int main() {
   mission.programState[stateIndex++] = ms_fwd_cross_black;
 #endif
 
+#else
+  mission.speed[stateIndex] = 0.10;
+  mission.programState[stateIndex++] = ms_fwd_gate_left;
+  mission.dist[stateIndex] = 0.10;
+  mission.speed[stateIndex] = 0.10;
+  mission.programState[stateIndex++] = ms_bwd;
+  mission.dist[stateIndex] = 0.15;
+  mission.speed[stateIndex] = 0.10;
+  mission.programState[stateIndex++] = ms_fwd_gate_left_check;
+
+  mission.dist[stateIndex] = 0.42;
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_fwd;
+  mission.programState[stateIndex++] = ms_stop;
   mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_turn_left;
+  mission.dist[stateIndex] = 0.70;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_fwd;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_turn_left;
+  mission.dist[stateIndex] = 0.50;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_fwd;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_turn_left;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_fwd_cross_black;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_fwd_fixed;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_turn_left;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_follow_black_cross;
+#endif
+
+  mission.speed[stateIndex] = 0.25;
+  uint8_t abortGateIndex = stateIndex;
   mission.programState[stateIndex++] = ms_fwd_fixed;
   mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_turn_left;
@@ -426,7 +494,7 @@ int main() {
 
   /********* White line *********/
   /* Goto white line */
-#if 1
+#if 0
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_follow_black_cross;
   mission.speed[stateIndex] = 0.20;
@@ -687,6 +755,21 @@ int main() {
           mission.state = mission.programState[++stateIndex];
         break;
 
+
+      case ms_center_angle_first:
+        if (getPhi() > -M_PI/2) {
+          mission.angle[stateIndex] =  getPhi() + M_PI/2;
+          mission.state = ms_turn_right;
+        }
+        else if (getPhi() < -M_PI/2) {
+          mission.angle[stateIndex] = -M_PI/2 - getPhi();
+          mission.state = ms_turn_left;
+        }
+        else // It already aligned properly
+          mission.state = mission.programState[++stateIndex];
+      break;
+
+
       case ms_turn_right:
         if (turn(&mot, -mission.angle[stateIndex], mission.speed[stateIndex], mission.time))
           mission.state = mission.programState[++stateIndex];
@@ -716,11 +799,52 @@ int main() {
           mission.state = mission.programState[++stateIndex];
         break;
 
+      case ms_fwd_gate_left:
       case ms_follow_black_gate_left:
-        if (followBlackLine(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time))
-          mission.state = ms_stop;
-        else if (ir.value[0] < IR_GATE_DIST)
+        if (ir.value[0] < 0.60)
+          printf("Left dist: %f\n", ir.value[0]);
+        if (mission.state == ms_fwd_gate_left) {
+          if (fwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time))
+            mission.state = ms_stop;
+        } else {
+          if (followBlackLine(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time))
+            mission.state = ms_stop;
+        }
+        if (ir.value[0] < IR_GATE_DIST)
           mission.state = mission.programState[++stateIndex];
+        else if (line.black_line_found) {
+          printf("Aborting gate\n");
+          stateIndex = abortGateIndex;
+          mission.state = mission.programState[stateIndex];
+        }
+        break;
+
+      case ms_fwd_gate_left_check:
+      case ms_follow_black_gate_left_check:
+        if (ir.value[0] < 0.60)
+          printf("Left dist: %f\n", ir.value[0]);
+        if (mission.state == ms_fwd_gate_left_check) {
+          if (fwd(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time)) {
+            printf("Check failed\n");
+            stateIndex -= 2;
+            mission.state = mission.programState[stateIndex];
+          }
+        } else {
+          if (followBlackLine(&mot, mission.dist[stateIndex], mission.speed[stateIndex], mission.time)) {
+            printf("Check failed\n");
+            stateIndex -= 2;
+            mission.state = mission.programState[stateIndex];
+          }
+        }
+        if (ir.value[0] < IR_GATE_DIST) {
+          printf("Check success\n");
+          mission.state = mission.programState[++stateIndex];
+        }
+        else if (line.black_line_found) {
+          printf("Aborting gate\n");
+          stateIndex = abortGateIndex;
+          mission.state = mission.programState[stateIndex];
+        }
         break;
 
       case ms_follow_black_gate_left_right:
@@ -739,22 +863,28 @@ int main() {
           mission.state = ms_center_line_black_right;
         else if (line.center_mass_neighbors[0] > 5)
           mission.state = ms_center_line_black_left;
-        else // The line is already in the center
+        else { // The line is already in the center
+          startYDist = -getY();
           mission.state = mission.programState[++stateIndex];
+        }
         break;
 
       case ms_center_line_black_right:
         if (turn(&mot, -M_PI/2, mission.speed[stateIndex], mission.time))
           mission.state = ms_center_line_black_left;
-        else if (line.center_mass_neighbors[0] >= 4.5)
+        else if (line.center_mass_neighbors[0] >= 4.5) {
+          startYDist = -getY();
           mission.state = mission.programState[++stateIndex];
+        }
         break;
 
       case ms_center_line_black_left:
         if (turn(&mot, M_PI/2, mission.speed[stateIndex], mission.time))
           mission.state = ms_center_line_black_right;
-        else if (line.center_mass_neighbors[0] <= 4.5)
+        else if (line.center_mass_neighbors[0] <= 4.5) {
+          startYDist = -getY();
           mission.state = mission.programState[++stateIndex];
+        }
         break;
 
       case ms_ir_dist: {
@@ -787,9 +917,10 @@ int main() {
           double x_new = (getXRaw() - mot.x0) / DIST_CAL;
           double y_new = (getYRaw() - mot.y0) / DIST_CAL;
           double dist = sqrt(x_new*x_new + y_new*y_new);
+          printf("startYDist: %f\n", startYDist);
           printf("Avg: %f %d %d\n", avg, use_left, use_right);
           printf("Dist: %f %f %f\n", x_new, y_new, dist);
-          printf("Total: %f\n", dist + avg + IR_LIN_DIST + START_CROSS_DIST);
+          printf("Total: %f\n", dist + avg + IR_WHEEL_DIST + startYDist);
           mission.state = mission.programState[++stateIndex];
         }
         break;

@@ -599,6 +599,12 @@ void printState(int state) {
     case ms_fwd_ir_wall_right:
       printf("ms_fwd_ir_wall_right\n");
       break;
+    case ms_fwd_gate_left:
+      printf("ms_fwd_gate_left\n");
+      break;
+    case ms_fwd_gate_left_check:
+      printf("ms_fwd_gate_left_check\n");
+      break;
     case ms_follow_white:
       printf("ms_follow_white\n");
       break;
@@ -610,6 +616,9 @@ void printState(int state) {
       break;
     case ms_follow_black_gate_left:
       printf("ms_follow_black_gate_left\n");
+      break;
+    case ms_follow_black_gate_left_check:
+      printf("ms_follow_black_gate_left_check\n");
       break;
     case ms_follow_black_gate_left_right:
       printf("ms_follow_black_gate_left_right\n");
@@ -640,6 +649,8 @@ void printState(int state) {
       break;
     case ms_center_line_black_right:
       printf("ms_center_line_black_right\n");
+    case ms_center_angle_first:
+      printf("ms_center_angle_first\n");
       break;
     case ms_ir_dist:
       printf("ms_ir_dist\n");
