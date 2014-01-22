@@ -170,17 +170,26 @@ int main() {
   /* Go to gate */
   mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_turn_left;
+  mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_fwd_cross_black;
+  mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_fwd_fixed;
+  mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_turn_right;
+  mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_follow_black_cross;
+  mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_turn_around;
   mission.dist[stateIndex] = 0.7;
+  mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_follow_black;
+  mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_turn_right;
-
+  mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_fwd_cross_black;
+  mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_fwd_fixed;
+  mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_turn_right;
 
   /* Push box */
@@ -216,11 +225,11 @@ int main() {
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_fwd_fixed;
 
+//Start:
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_follow_black_cross;
 
   /********* Gate on the loose *********/
-#if 1
   mission.dist[stateIndex] = 0.30;
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_fwd;
@@ -229,18 +238,13 @@ int main() {
   mission.speed[stateIndex] = 0.20;
   mission.programState[stateIndex++] = ms_turn_right;
 
-//Start:
+  mission.dist[stateIndex] = 0.85;
   mission.speed[stateIndex] = 0.15;
-  mission.programState[stateIndex++] = ms_follow_black_cross;
+  mission.programState[stateIndex++] = ms_follow_black;
 
-#if 0
-  mission.speed[stateIndex] = 0.25;
-  mission.programState[stateIndex++] = ms_fwd_fixed;
-#else
-  mission.speed[stateIndex] = 0.15;
-  mission.programState[stateIndex++] = ms_fwd_fixed;
   mission.speed[stateIndex] = 0.10;
   mission.programState[stateIndex++] = ms_center_line_black;
+  mission.programState[stateIndex++] = ms_wait_1s;
   mission.speed[stateIndex] = 0.15;
   mission.programState[stateIndex++] = ms_turn_left;
   mission.dist[stateIndex] = 0.15;
@@ -248,15 +252,6 @@ int main() {
   mission.programState[stateIndex++] = ms_fwd;
   mission.speed[stateIndex] = 0.15;
   mission.programState[stateIndex++] = ms_turn_right;
-#endif
-
-#else
-  mission.speed[stateIndex] = 0.20;
-  mission.dist[stateIndex] = 0.20;
-  mission.programState[stateIndex++] = ms_follow_black;
-  mission.speed[stateIndex] = 0.20;
-  mission.programState[stateIndex++] = ms_center_line_black;
-#endif
 
   /* Look for gate */
 #if 0
