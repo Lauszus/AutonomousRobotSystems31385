@@ -179,12 +179,20 @@ int main() {
   mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_follow_black_cross;
   mission.speed[stateIndex] = 0.25;
+#if 0
   mission.programState[stateIndex++] = ms_turn_around;
   mission.dist[stateIndex] = 0.7;
   mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_follow_black;
   mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_turn_right;
+#else
+  mission.dist[stateIndex] = 0.7;
+  mission.speed[stateIndex] = 0.15;
+  mission.programState[stateIndex++] = ms_bwd;
+  mission.speed[stateIndex] = 0.25;
+  mission.programState[stateIndex++] = ms_turn_left;
+#endif
   mission.speed[stateIndex] = 0.25;
   mission.programState[stateIndex++] = ms_fwd_cross_black;
   mission.speed[stateIndex] = 0.25;
@@ -242,8 +250,8 @@ int main() {
   mission.speed[stateIndex] = 0.15;
   mission.programState[stateIndex++] = ms_follow_black;
 
-  mission.speed[stateIndex] = 0.10;
-  mission.programState[stateIndex++] = ms_center_line_black;
+  /*mission.speed[stateIndex] = 0.10;
+  mission.programState[stateIndex++] = ms_center_line_black;*/
   mission.programState[stateIndex++] = ms_wait_1s;
   mission.speed[stateIndex] = 0.15;
   mission.programState[stateIndex++] = ms_turn_left;
@@ -762,7 +770,7 @@ int main() {
         }
         else // It already aligned properly
           mission.state = mission.programState[++stateIndex];
-      break;
+        break;
 
 
       case ms_turn_right:
