@@ -653,6 +653,7 @@ int main() {
 #else
         stateIndex = 0;
         mission.state = mission.programState[stateIndex];
+        resetXYPhi();
 #endif
       break;
 
@@ -923,7 +924,7 @@ int main() {
           printf("startYDist: %f\n", startYDist);
           printf("Avg: %f %d %d\n", avg, use_left, use_right);
           printf("Dist: %f %f %f\n", x_new, y_new, dist);
-          printf("Total: %f\n", dist + avg + IR_WHEEL_DIST + startYDist);
+          printf("Total: %f\n", dist + avg + IR_WHEEL_DIST + fabs(startYDist));
           mission.state = mission.programState[++stateIndex];
         }
         break;

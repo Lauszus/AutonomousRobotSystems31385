@@ -74,6 +74,7 @@ double getXRaw();
 double getY();
 double getYRaw();
 double getPhi();
+void resetXYPhi();
 
 void printState(int state);
 

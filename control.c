@@ -23,6 +23,10 @@ double getPhi() {
   return phi;
 }
 
+void resetXYPhi() {
+  x = y = phi = 0;
+}
+
 void updateIRSensor(symTableElement *irsensor, irsensortype *p) {
   uint8_t i;
   for (i = 0; i < p->length; i++) {
@@ -649,6 +653,7 @@ void printState(int state) {
       break;
     case ms_center_line_black_right:
       printf("ms_center_line_black_right\n");
+      break;
     case ms_center_angle_first:
       printf("ms_center_angle_first\n");
       break;
